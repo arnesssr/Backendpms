@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../types/database'
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
 // Validate environment variables
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
@@ -64,7 +65,9 @@ export const supabaseService = {
         event: '*',
         schema: 'public',
         table: 'products'
-      }, payload => {
+      }, (payload: RealtimePostgresChangesPayload<{
+        [key: string]: any
+      }>) => {
         console.log('Product change received:', payload)
       })
       .subscribe()
@@ -76,7 +79,9 @@ export const supabaseService = {
         event: '*',
         schema: 'public',
         table: 'inventory'
-      }, payload => {
+      }, (payload: RealtimePostgresChangesPayload<{
+        [key: string]: any
+      }>) => {
         console.log('Inventory change received:', payload)
       })
       .subscribe()

@@ -8,7 +8,9 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@clerk/backend": "^0.38.3",
     "@clerk/clerk-sdk-node": "^5.1.6",
+    "@supabase/supabase-js": "^2.39.3",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
@@ -23,16 +25,16 @@
     "@jest/globals": "^29.7.0",
     "@types/body-parser": "^1.19.5",
     "@types/cors": "^2.8.18",
-    "@types/express": "^5.0.1",
+    "@types/express": "^4.17.21",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.9",
-    "@types/node": "^22.15.17",
+    "@types/node": "^20.11.19",
     "@types/pg": "^8.15.1",
     "@types/supertest": "^6.0.3",
     "jest": "^29.7.0",
     "supertest": "^7.1.0",
     "ts-jest": "^29.3.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.3.3"
   }
 }
