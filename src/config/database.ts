@@ -6,14 +6,14 @@ const poolConfig: DatabaseConfig = {
   ssl: {
     rejectUnauthorized: false // Required for Neon DB
   },
-  connectionTimeoutMillis: 5000, // 5 seconds timeout
-  max: 20 // Maximum pool size
+  connectionTimeoutMillis: 5000,
+  max: 20
 };
 
 export const db = new Pool(poolConfig);
 
 export async function dbConnect() {
-  let client: PoolClient | undefined;
+  let client: PoolClient;
   try {
     client = await db.connect();
     await client.query('SELECT NOW()'); // Test query
@@ -23,9 +23,7 @@ export async function dbConnect() {
     console.error('Database connection error:', error);
     throw error;
   } finally {
-    if (client) {
-      client.release(); // Ensure client is always released back to pool
-    }
+    client.release(); // Ensure client is always released back to pool
   }
 }
 

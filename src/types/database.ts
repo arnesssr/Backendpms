@@ -60,6 +60,7 @@ export interface Database {
 
 // Add DatabaseConfig interface
 export interface DatabaseConfig extends PoolConfig {
+  connectionString?: string; // Add this property
   ssl?: {
     rejectUnauthorized: boolean;
   };
