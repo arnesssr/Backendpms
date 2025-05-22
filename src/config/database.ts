@@ -1,6 +1,7 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
+import { DatabaseConfig } from '../types/database';
 
-const poolConfig = {
+const poolConfig: DatabaseConfig = {
   connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false // Required for Neon DB
@@ -12,7 +13,7 @@ const poolConfig = {
 export const db = new Pool(poolConfig);
 
 export async function dbConnect() {
-  let client;
+  let client: PoolClient | undefined;
   try {
     client = await db.connect();
     await client.query('SELECT NOW()'); // Test query
@@ -29,13 +30,13 @@ export async function dbConnect() {
 }
 
 // Handle pool errors
-db.on('error', (err) => {
+db.on('error', (err: Error) => {
   console.error('Unexpected error on idle client', err);
   process.exit(-1);
 });
 
 // Add cleanup on application shutdown
 process.on('SIGINT', async () => {
-  await db.end();
+  await db.end(); // Now TypeScript knows this exists
   process.exit(0);
 });

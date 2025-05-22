@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import clerk from '@clerk/backend'
-
-const clerkClient = clerk
+import { clerk } from '@clerk/backend'
 
 declare global {
   namespace Express {
@@ -14,21 +12,28 @@ declare global {
   }
 }
 
-export const auth = async (req: Request, res: Response, next: NextFunction) => {
+// Define RequestHandler type for auth middleware
+type AuthHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => Promise<void>
+
+// Export auth middleware with correct type
+export const auth: AuthHandler = async (req, res, next) => {
   const apiKey = req.headers['x-api-key']
   const bearerToken = req.headers.authorization?.split(' ')[1]
- 
+
   try {
     // Check API key for Storefront requests
     if (apiKey === process.env.API_KEY) {
       return next()
     }
-   
+
     // Check Clerk session for PMS requests
     if (bearerToken) {
       try {
-        // Using verifyToken instead of getSession
-        const session = await clerk.verifyToken(bearerToken)
+        const session = await clerk.sessions.verifyToken(bearerToken)
         if (session) {
           req.user = session.userId
           req.auth = { userId: session.userId }
@@ -38,7 +43,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
         console.error('Session verification error:', error)
       }
     }
-   
+
     res.status(401).json({ error: 'Unauthorized' })
   } catch (error) {
     console.error('Auth Error:', error)
@@ -46,4 +51,5 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
   }
 }
 
+// Export type for use in routes
 export type AuthMiddleware = typeof auth

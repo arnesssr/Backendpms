@@ -1,3 +1,6 @@
+import { PoolConfig } from 'pg';
+
+// Extend the existing Database interface
 export interface Database {
   public: {
     Tables: {
@@ -52,5 +55,22 @@ export interface Database {
         }
       }
     }
+  }
+}
+
+// Add DatabaseConfig interface
+export interface DatabaseConfig extends PoolConfig {
+  ssl?: {
+    rejectUnauthorized: boolean;
+  };
+  connectionTimeoutMillis?: number;
+  max?: number;
+}
+
+// Add Pool methods interface
+declare module 'pg' {
+  interface Pool {
+    end(): Promise<void>;
+    // Add other Pool methods if needed
   }
 }
