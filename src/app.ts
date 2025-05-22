@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import bodyParser from 'body-parser';
 import { dbConnect } from './config/database';
 
 const app = express();
@@ -14,7 +13,8 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
