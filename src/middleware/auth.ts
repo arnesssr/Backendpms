@@ -27,7 +27,8 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
     // Check Clerk session for PMS requests
     if (bearerToken) {
       try {
-        const session = await clerkClient.sessions.getSession(bearerToken)
+        // Using verifyToken instead of getSession
+        const session = await clerk.verifyToken(bearerToken)
         if (session) {
           req.user = session.userId
           req.auth = { userId: session.userId }
