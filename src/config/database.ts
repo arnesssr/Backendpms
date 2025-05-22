@@ -13,7 +13,7 @@ const poolConfig: DatabaseConfig = {
 export const db = new Pool(poolConfig);
 
 export async function dbConnect() {
-  let client: PoolClient;
+  let client: PoolClient | undefined;
   try {
     client = await db.connect();
     await client.query('SELECT NOW()'); // Test query
@@ -23,7 +23,9 @@ export async function dbConnect() {
     console.error('Database connection error:', error);
     throw error;
   } finally {
-    client.release(); // Ensure client is always released back to pool
+    if (client) {  // Add null check
+      client.release(); // Ensure client is always released back to pool
+    }
   }
 }
 

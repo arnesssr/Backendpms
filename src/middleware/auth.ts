@@ -1,5 +1,11 @@
 import { Request, Response, NextFunction } from 'express'
-import { clerk } from '@clerk/backend'
+import { Clerk } from '@clerk/backend'
+
+// Initialize Clerk with proper typing
+const clerk = new Clerk({ 
+  secretKey: process.env.CLERK_SECRET_KEY || '' 
+})
+
 
 declare global {
   namespace Express {
@@ -33,6 +39,7 @@ export const auth: AuthHandler = async (req, res, next) => {
     // Check Clerk session for PMS requests
     if (bearerToken) {
       try {
+        // Changed from verifySession to verifyToken
         const session = await clerk.sessions.verifyToken(bearerToken)
         if (session) {
           req.user = session.userId

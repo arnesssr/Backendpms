@@ -1,4 +1,4 @@
-import { PoolConfig } from 'pg';
+import { Pool } from 'pg';
 
 // Extend the existing Database interface
 export interface Database {
@@ -59,13 +59,21 @@ export interface Database {
 }
 
 // Add DatabaseConfig interface
-export interface DatabaseConfig extends PoolConfig {
-  connectionString?: string; // Add this property
+export interface DatabaseConfig {
+  connectionString?: string;
   ssl?: {
     rejectUnauthorized: boolean;
   };
   connectionTimeoutMillis?: number;
   max?: number;
+  // Add other pool config options
+  user?: string;
+  password?: string;
+  host?: string;
+  database?: string;
+  port?: number;
+  application_name?: string;
+  keepAlive?: boolean;
 }
 
 // Add Pool methods interface
