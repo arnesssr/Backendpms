@@ -1,10 +1,10 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { db } from '../config/database';
 import { auth } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const { rows } = await db.query('SELECT * FROM categories');
     res.json(rows);
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, async (req: Request, res: Response) => {
   try {
     const { name, description } = req.body;
     const { rows } = await db.query(

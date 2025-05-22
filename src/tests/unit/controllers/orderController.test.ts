@@ -1,8 +1,6 @@
-import { describe, it, expect, jest } from '@jest/globals';
-import { orderController } from '../../../controllers/orderController';
-import { orderService } from '../../../services/orderService';
-
-jest.mock('../../../services/orderService');
+import { describe, it, expect, jest } from '@jest/globals'
+import { Request, Response } from 'express'
+import { orderController } from '../../../controllers/orderController'
 
 describe('Order Controller', () => {
   it('should create a new order', async () => {

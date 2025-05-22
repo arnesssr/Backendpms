@@ -41,4 +41,29 @@ router.get('/:id/movements', auth, async (req, res) => {
   }
 });
 
+router.get('/:productId/stock', auth, async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      'SELECT stock FROM inventory WHERE product_id = $1',
+      [req.params.productId]
+    );
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch inventory stock' });
+  }
+});
+
+router.post('/:productId/adjust', auth, async (req, res) => {
+  const { adjustment } = req.body;
+  try {
+    const { rows } = await db.query(
+      'UPDATE inventory SET stock = stock + $1, updated_at = NOW() WHERE product_id = $2 RETURNING *',
+      [adjustment, req.params.productId]
+    );
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to adjust inventory' });
+  }
+});
+
 export default router;

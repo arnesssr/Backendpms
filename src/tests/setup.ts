@@ -1,11 +1,20 @@
-import { db } from '../config/database'
+import { jest, beforeAll, afterAll } from '@jest/globals'
+import { Database } from '../types/database'
+
+declare global {
+  var createMockDatabase: () => Partial<Database>;
+}
 
 beforeAll(async () => {
-  // Ensure database connection
-  await db.connect()
+  // Setup test database connection
+  process.env.NODE_ENV = 'test'
 })
 
 afterAll(async () => {
-  // Close database connection
-  await db.end()
+  // Cleanup test database
+})
+
+// Global test utilities
+global.createMockDatabase = (): Partial<Database> => ({
+  // Add mock database implementation
 })

@@ -1,13 +1,12 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import type { Database } from '../types/database'
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
 // Validate environment variables
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
-  throw new Error('Missing Supabase environment variables')
+  throw new Error('Missing required environment variables: SUPABASE_URL, SUPABASE_KEY')
 }
 
-// Initialize Supabase client
+// Initialize Supabase client with validated environment variables
 export const supabase = createClient<Database>(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
