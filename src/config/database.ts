@@ -1,43 +1,62 @@
 import { Pool, PoolClient } from 'pg';
 import { DatabaseConfig } from '../types/database';
+import dotenv from 'dotenv';
 
-// Direct connection pool for admin operations
-const adminPoolConfig: DatabaseConfig = {
-  connectionString: process.env.DATABASE_URL,
+// Load environment variables at startup
+dotenv.config();
+
+// Validate required database environment variables
+if (!process.env.DATABASE_URL || !process.env.DATABASE_POOL_URL) {
+  throw new Error('Missing required database environment variables');
+}
+
+const baseConfig = {
   ssl: {
     rejectUnauthorized: false
   },
   connectionTimeoutMillis: 5000,
-  max: 5 // Smaller pool for admin operations
+  statement_timeout: 10000,
+  query_timeout: 10000,
+  keepAlive: true
+};
+
+// Direct connection pool for admin operations
+const adminPoolConfig: DatabaseConfig = {
+  connectionString: process.env.DATABASE_URL,
+  ...baseConfig,
+  max: 5
 };
 
 // Connection pooler for high-concurrency operations
 const poolerConfig: DatabaseConfig = {
   connectionString: process.env.DATABASE_POOL_URL,
-  ssl: {
-    rejectUnauthorized: false
-  },
-  connectionTimeoutMillis: 5000,
-  max: 20 // Larger pool for concurrent operations
+  ...baseConfig,
+  max: 20
 };
 
-// Export both pools
+// Export both pools with validated configurations
 export const adminDb = new Pool(adminPoolConfig);
-export const db = new Pool(poolerConfig); // Default pool for regular operations
+export const db = new Pool(poolerConfig);
 
 export async function dbConnect() {
   let client: PoolClient | undefined;
-  try {
-    client = await db.connect();
-    await client.query('SELECT NOW()');
-    console.log('Database connected successfully');
-    return true;
-  } catch (error) {
-    console.error('Database connection error:', error);
-    throw error;
-  } finally {
-    if (client) {
-      client.release();
+  let retries = 5;
+
+  while (retries > 0) {
+    try {
+      client = await db.connect();
+      await client.query('SELECT NOW()');
+      console.log('Database connected successfully');
+      return true;
+    } catch (error) {
+      retries -= 1;
+      console.error(`Database connection error (${retries} retries left):`, error);
+      if (retries === 0) throw error;
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5s between retries
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   }
 }
@@ -45,9 +64,9 @@ export async function dbConnect() {
 // Handle pool errors
 db.on('error', (err: Error) => {
   console.error('Unexpected error on idle client', err);
-  process.exit(-1);
 });
 
+// Handle pool errors
 adminDb.on('error', (err: Error) => {
   console.error('Unexpected error on admin client', err);
   process.exit(-1);

@@ -1,31 +1,31 @@
-import { z } from 'zod';
+import dotenv from 'dotenv';
+import { cleanEnv, str, num } from 'envalid';
 
-const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().transform(Number).default('5000'),
-  DATABASE_URL: z.string(),
-  PMS_URL: z.string().default('http://localhost:5173'),
-  STOREFRONT_URL: z.string().default('http://localhost:3000'),
-  API_KEY: z.string(),
+// Load .env file
+dotenv.config();
+
+// Validate and export environment variables
+export const env = cleanEnv(process.env, {
+  // Database
+  DATABASE_URL: str(),
+  DATABASE_POOL_URL: str(),
+
+  // Clerk Auth
+  CLERK_SECRET_KEY: str(),
+  CLERK_JWT_KEY: str(),
+
+  // Supabase
+  SUPABASE_URL: str(),
+  SUPABASE_KEY: str(),
+  SUPABASE_SERVICE_ROLE_KEY: str(),
+
+  // API Config
+  API_KEY: str(),
+  PORT: num({ default: 3000 }),
+
+  // Logging
+  LOG_LEVEL: str({ default: 'info' }),
+
+  // Environment
+  NODE_ENV: str({ default: 'development' }),
 });
-
-try {
-  envSchema.parse(process.env);
-} catch (error) {
-  console.error('Invalid environment variables:', error);
-  process.exit(1);
-}
-
-export const config = {
-  env: process.env.NODE_ENV,
-  port: parseInt(process.env.PORT || '5000', 10),
-  database: {
-    url: process.env.DATABASE_URL,
-  },
-  cors: {
-    origins: [process.env.PMS_URL, process.env.STOREFRONT_URL],
-  },
-  api: {
-    key: process.env.API_KEY,
-  },
-} as const;
