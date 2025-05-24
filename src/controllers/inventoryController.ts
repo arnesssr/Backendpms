@@ -29,5 +29,17 @@ export const inventoryController = {
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch inventory' })
     }
+  },
+
+  async getStock(req: Request, res: Response) {
+    try {
+      const [stock] = await db`
+        SELECT * FROM inventory 
+        WHERE product_id = ${req.params.id}
+      `
+      res.json(stock || { stock: 0 })
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch stock' })
+    }
   }
 }

@@ -1,14 +1,15 @@
 {
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "start": "node dist/server.js",
     "test": "pnpm jest",
     "test:watch": "pnpm jest --watch",
     "test:coverage": "jest --coverage",
     "test:db": "jest src/tests/integration/database.test.ts --config=jest.config.ts --detectOpenHandles",
     "test:api": "jest src/tests/integration/api --config=jest.config.ts --detectOpenHandles",
-    "migrate": "ts-node src/db/migrate.ts"
+    "migrate": "ts-node src/db/migrate.ts",
+    "postinstall": "tsc"
   },
   "dependencies": {
     "@clerk/backend": "^0.38.3",
@@ -42,6 +43,7 @@
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "tsc-alias": "^1.8.8"
   }
 }

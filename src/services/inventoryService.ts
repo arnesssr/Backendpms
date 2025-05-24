@@ -1,30 +1,44 @@
-import { db } from '../config/database'
+import { db } from '../config/database';
+
+interface StockMovement {
+  product_id: string;
+  type: 'in' | 'out';
+  quantity: number;
+  notes?: string | null;
+}
 
 export const inventoryService = {
-  async updateStock(productId: string, quantity: number) {
-    const { rows } = await db.query(
-      `UPDATE inventory 
-       SET stock = stock + $1, updated_at = NOW()
-       WHERE product_id = $2 RETURNING *`,
-      [quantity, productId]
-    )
-    return rows[0]
-  },
-
   async getStock(productId: string) {
-    const { rows } = await db.query(
-      'SELECT * FROM inventory WHERE product_id = $1',
-      [productId]
-    )
-    return rows[0]
+    const [inventory] = await db`
+      SELECT * FROM inventory 
+      WHERE product_id = ${productId}
+    `;
+    return inventory;
   },
 
-  async recordMovement(productId: string, quantity: number, type: 'in' | 'out', notes?: string) {
-    const { rows } = await db.query(
-      `INSERT INTO inventory_movements (product_id, quantity, type, notes)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [productId, quantity, type, notes]
-    )
-    return rows[0]
+  async updateStock(productId: string, stock: number) {
+    const [updated] = await db`
+      UPDATE inventory 
+      SET stock = ${stock}
+      WHERE product_id = ${productId}
+      RETURNING *
+    `;
+    return updated;
+  },
+
+  async trackMovement(data: { productId: string; type: string; quantity: number; notes?: string }) {
+    const values: StockMovement = {
+      product_id: data.productId,
+      type: data.type as 'in' | 'out',
+      quantity: data.quantity,
+      notes: data.notes || null // Convert undefined to null for SQL
+    };
+
+    const [movement] = await db`
+      INSERT INTO stock_movements ${db(values)}
+      RETURNING *
+    `;
+    
+    return movement;
   }
-}
+};

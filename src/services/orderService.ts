@@ -1,48 +1,82 @@
-import { db } from '../config/database'
-import type { Order, OrderItem } from '../types/order'
+import { db } from '../config/database';
+import { Order, CreateOrderDTO } from '../types/order';
 
 export const orderService = {
-  async create(data: Omit<Order, 'id' | 'createdAt'>) {
-    // Start transaction
-    const client = await db.connect()
-    try {
-      await client.query('BEGIN')
-      
+  async createOrder(data: CreateOrderDTO) {
+    // Use postgres.js transaction
+    return await db.begin(async (sql) => {
       // Create order
-      const { rows: [order] } = await client.query(
-        `INSERT INTO orders (customer_name, customer_email, status, total)
-         VALUES ($1, $2, $3, $4) RETURNING *`,
-        [data.customerName, data.customerEmail, 'pending', data.total]
-      )
+      const [order] = await sql`
+        INSERT INTO orders (
+          customer_name, 
+          customer_email, 
+          status, 
+          total
+        ) VALUES (
+          ${data.customerName},
+          ${data.customerEmail},
+          'pending',
+          ${data.total}
+        ) 
+        RETURNING *
+      `;
 
       // Create order items
-      for (const item of data.items) {
-        await client.query(
-          `INSERT INTO order_items (order_id, product_id, quantity, price_at_time)
-           VALUES ($1, $2, $3, $4)`,
-          [order.id, item.productId, item.quantity, item.unitPrice]
-        )
+      if (data.items.length > 0) {
+        await sql`
+          INSERT INTO order_items ${sql(
+            data.items.map(item => ({
+              order_id: order.id,
+              product_id: item.productId,
+              quantity: item.quantity,
+              price: item.price
+            }))
+          )}
+        `;
       }
 
-      await client.query('COMMIT')
-      return order
-    } catch (error) {
-      await client.query('ROLLBACK')
-      throw error
-    } finally {
-      client.release()
-    }
+      return order;
+    });
   },
 
-  async findById(id: string) {
-    const { rows: [order] } = await db.query('SELECT * FROM orders WHERE id = $1', [id])
-    if (!order) return null
+  async getOrders() {
+    const orders = await db`
+      SELECT * FROM orders 
+      ORDER BY created_at DESC
+    `;
+    return orders;
+  },
 
-    const { rows: items } = await db.query(
-      'SELECT * FROM order_items WHERE order_id = $1',
-      [id]
-    )
-    
-    return { ...order, items }
+  async getOrderById(id: string) {
+    const [order] = await db`
+      SELECT 
+        o.*,
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'id', oi.id,
+              'productId', oi.product_id,
+              'quantity', oi.quantity,
+              'price', oi.price
+            )
+          ) FILTER (WHERE oi.id IS NOT NULL),
+          '[]'
+        ) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      WHERE o.id = ${id}
+      GROUP BY o.id
+    `;
+    return order;
+  },
+
+  async updateOrderStatus(id: string, status: Order['status']) {
+    const [updated] = await db`
+      UPDATE orders 
+      SET status = ${status}
+      WHERE id = ${id}
+      RETURNING *
+    `;
+    return updated;
   }
-}
+};

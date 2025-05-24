@@ -1,11 +1,15 @@
 import { Request, Response } from 'express'
 import { db } from '../config/database'
+import { Product } from '../types/controllers'
 
 export const productController = {
   async getAllProducts(req: Request, res: Response) {
     try {
-      const { rows } = await db.query('SELECT * FROM products WHERE status = $1', ['published'])
-      res.json(rows)
+      const products = await db`
+        SELECT * FROM products
+        WHERE status = 'published'
+      `
+      res.json(products)
     } catch (error) {
       console.error('Error fetching products:', error)
       res.status(500).json({ error: 'Failed to fetch products' })
@@ -15,11 +19,23 @@ export const productController = {
   async createProduct(req: Request, res: Response) {
     const { name, price, description, category, imageUrls } = req.body
     try {
-      const { rows } = await db.query(
-        'INSERT INTO products (name, price, description, category, image_urls) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [name, price, description, category, imageUrls]
-      )
-      res.status(201).json(rows[0])
+      const [product] = await db`
+        INSERT INTO products (
+          name, 
+          price, 
+          description, 
+          category, 
+          image_urls
+        ) VALUES (
+          ${name}, 
+          ${price}, 
+          ${description}, 
+          ${category}, 
+          ${imageUrls}
+        )
+        RETURNING *
+      `
+      res.status(201).json(product)
     } catch (error) {
       console.error('Error creating product:', error)
       res.status(500).json({ error: 'Failed to create product' })
@@ -28,12 +44,19 @@ export const productController = {
 
   async updateProduct(req: Request, res: Response) {
     const { id } = req.params
+    const { name, price, description } = req.body
     try {
-      const { rows } = await db.query(
-        'UPDATE products SET name = $1, price = $2, description = $3, updated_at = NOW() WHERE id = $4 RETURNING *',
-        [req.body.name, req.body.price, req.body.description, id]
-      )
-      res.json(rows[0])
+      const [updated] = await db`
+        UPDATE products 
+        SET 
+          name = ${name}, 
+          price = ${price}, 
+          description = ${description},
+          updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `
+      res.json(updated)
     } catch (error) {
       res.status(500).json({ error: 'Failed to update product' })
     }

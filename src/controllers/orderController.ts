@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { db } from '../config/database'
+import { Order } from '../types/controllers'
 
 export const orderController = {
   async createOrder(req: Request, res: Response) {
@@ -28,8 +29,11 @@ export const orderController = {
 
   async getOrders(req: Request, res: Response) {
     try {
-      const { rows } = await db.query('SELECT * FROM orders ORDER BY created_at DESC')
-      res.json(rows)
+      const orders = await db<Order[]>`
+        SELECT * FROM orders
+        ORDER BY created_at DESC
+      `
+      res.json(orders)
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch orders' })
     }
