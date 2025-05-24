@@ -1,29 +1,29 @@
-import { Request, Response } from 'express'
-import { db } from '../config/database'
-import { Order } from '../types/controllers'
+import { Request, Response } from 'express';
+import { db } from '../config/database';
+import { Order } from '../types/models/controllers';
 
 export const orderController = {
   async createOrder(req: Request, res: Response) {
-    const { customerName, customerEmail, items, total } = req.body
+    const { customerName, customerEmail, items, total } = req.body;
     try {
       const { rows } = await db.query(
         'INSERT INTO orders (customer_name, customer_email, total, status) VALUES ($1, $2, $3, $4) RETURNING *',
         [customerName, customerEmail, total, 'pending']
-      )
-      const orderId = rows[0].id
+      );
+      const orderId = rows[0].id;
 
       // Insert order items
       for (const item of items) {
         await db.query(
           'INSERT INTO order_items (order_id, product_id, quantity, price_at_time) VALUES ($1, $2, $3, $4)',
           [orderId, item.productId, item.quantity, item.price]
-        )
+        );
       }
 
-      res.status(201).json(rows[0])
+      res.status(201).json(rows[0]);
     } catch (error) {
-      console.error('Error creating order:', error)
-      res.status(500).json({ error: 'Failed to create order' })
+      console.error('Error creating order:', error);
+      res.status(500).json({ error: 'Failed to create order' });
     }
   },
 
@@ -32,10 +32,10 @@ export const orderController = {
       const orders = await db<Order[]>`
         SELECT * FROM orders
         ORDER BY created_at DESC
-      `
-      res.json(orders)
+      `;
+      res.json(orders);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch orders' })
+      res.status(500).json({ error: 'Failed to fetch orders' });
     }
   }
-}
+};

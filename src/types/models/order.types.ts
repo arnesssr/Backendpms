@@ -1,7 +1,23 @@
-export interface Order {
-  id: string;
-  customer_name: string;
-  customer_email: string;
+export interface OrderItem {
+  productId: string;
+  quantity: number;
+  price: number;
+}
+
+export interface CreateOrderDTO {
+  customerName: string;
+  customerEmail: string;
   total: number;
-  status: string;
+  items: OrderItem[];
+}
+
+export interface Order {
+  id?: string;
+  customerName: string;
+  customerEmail: string;
+  total: number;
+  status: 'pending' | 'processing' | 'completed' | 'cancelled';
+  items: OrderItem[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }

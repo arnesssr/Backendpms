@@ -1,7 +1,8 @@
 {
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc && tsc-alias",
+    "build": "npm run clean && tsc",
+    "clean": "rm -rf dist",
     "start": "node dist/server.js",
     "test": "pnpm jest",
     "test:watch": "pnpm jest --watch",

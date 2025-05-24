@@ -1,6 +1,6 @@
-import { Request, Response } from 'express'
-import { db } from '../config/database'
-import { Product } from '../types/controllers'
+import { Request, Response } from 'express';
+import { db } from '../config/database';
+import { Product } from '../types/models/controllers';
 
 export const productController = {
   async getAllProducts(req: Request, res: Response) {
@@ -8,16 +8,16 @@ export const productController = {
       const products = await db`
         SELECT * FROM products
         WHERE status = 'published'
-      `
-      res.json(products)
+      `;
+      res.json(products);
     } catch (error) {
-      console.error('Error fetching products:', error)
-      res.status(500).json({ error: 'Failed to fetch products' })
+      console.error('Error fetching products:', error);
+      res.status(500).json({ error: 'Failed to fetch products' });
     }
   },
 
   async createProduct(req: Request, res: Response) {
-    const { name, price, description, category, imageUrls } = req.body
+    const { name, price, description, category, imageUrls } = req.body;
     try {
       const [product] = await db`
         INSERT INTO products (
@@ -34,17 +34,17 @@ export const productController = {
           ${imageUrls}
         )
         RETURNING *
-      `
-      res.status(201).json(product)
+      `;
+      res.status(201).json(product);
     } catch (error) {
-      console.error('Error creating product:', error)
-      res.status(500).json({ error: 'Failed to create product' })
+      console.error('Error creating product:', error);
+      res.status(500).json({ error: 'Failed to create product' });
     }
   },
 
   async updateProduct(req: Request, res: Response) {
-    const { id } = req.params
-    const { name, price, description } = req.body
+    const { id } = req.params;
+    const { name, price, description } = req.body;
     try {
       const [updated] = await db`
         UPDATE products 
@@ -55,10 +55,10 @@ export const productController = {
           updated_at = NOW()
         WHERE id = ${id}
         RETURNING *
-      `
-      res.json(updated)
+      `;
+      res.json(updated);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to update product' })
+      res.status(500).json({ error: 'Failed to update product' });
     }
   }
-}
+};

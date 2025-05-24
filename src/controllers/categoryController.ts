@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../config/database';
-import { Category } from '../types/controllers';
+import { Category } from '../types/models/controllers';
 
 export const categoryController = {
   async getAllCategories(req: Request, res: Response) {
@@ -11,7 +11,7 @@ export const categoryController = {
       `;
       res.json(categories);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Get categories error:', error);
       res.status(500).json({ error: 'Failed to fetch categories' });
     }
   },
