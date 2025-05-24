@@ -1,14 +1,18 @@
 import express from 'express';
 import cors from 'cors';
-import { dbConnect } from './config/database';
+import { db, dbConnect } from './config/database';
+import productRoutes from './routes/productRoutes';
+import categoryRoutes from './routes/categoryRoutes';
+import inventoryRoutes from './routes/inventoryRoutes';
+import orderRoutes from './routes/orderRoutes';
 
 const app = express();
 
 // Middleware
 app.use(cors({
   origin: [
-    process.env.PMS_URL || 'http://localhost:5173',    // PMS Frontend
-    process.env.STOREFRONT_URL || 'http://localhost:3000'  // Storefront
+    process.env.PMS_URL || 'http://localhost:5173',
+    process.env.STOREFRONT_URL || 'http://localhost:3000'
   ],
   credentials: true
 }));
@@ -16,17 +20,24 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Routes
+app.use('/api/products', productRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/orders', orderRoutes);
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Initialize database
-dbConnect().then(() => {
-  console.log('Database connected successfully');
-}).catch(err => {
-  console.error('Database connection failed:', err);
-  process.exit(1);
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error:', err);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
 
 export { app };

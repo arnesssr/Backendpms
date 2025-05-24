@@ -1,68 +1,99 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { db } from '../config/database';
-import { auth } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/:productId', auth, async (req, res) => {
+// Create initial inventory record when creating a product
+router.post('/:productId', async (req: Request, res: Response) => {
   try {
-    const { rows } = await db.query(
-      'SELECT * FROM inventory WHERE product_id = $1',
-      [req.params.productId]
-    );
-    res.json(rows[0]);
+    const [inventory] = await db`
+      INSERT INTO inventory (product_id, stock, minimum_stock)
+      VALUES (${req.params.productId}, 0, 5)
+      RETURNING *
+    `;
+    res.status(201).json(inventory);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch inventory' });
+    res.status(500).json({ error: 'Failed to create inventory record' });
   }
 });
 
-router.put('/:productId/stock', auth, async (req, res) => {
-  const { stock } = req.body;
+// Get stock level
+router.get('/:productId/stock', async (req, res) => {
   try {
-    const { rows } = await db.query(
-      'UPDATE inventory SET stock = $1, updated_at = NOW() WHERE product_id = $2 RETURNING *',
-      [stock, req.params.productId]
-    );
-    res.json(rows[0]);
+    const [inventory] = await db`
+      SELECT * FROM inventory 
+      WHERE product_id = ${req.params.productId}
+    `;
+    res.json(inventory || { stock: 0 });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update inventory' });
+    res.status(500).json({ error: 'Failed to fetch stock' });
   }
 });
 
-router.get('/:id/movements', auth, async (req, res) => {
+// Update stock level
+router.put('/:productId/stock', async (req, res) => {
   try {
-    const { rows } = await db.query(
-      'SELECT * FROM inventory_movements WHERE product_id = $1 ORDER BY created_at DESC',
-      [req.params.id]
-    );
-    res.json(rows);
+    const [updated] = await db`
+      INSERT INTO inventory (product_id, stock)
+      VALUES (${req.params.productId}, ${req.body.stock})
+      ON CONFLICT (product_id) 
+      DO UPDATE SET stock = ${req.body.stock}
+      RETURNING *
+    `;
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch inventory movements' });
+    res.status(500).json({ error: 'Failed to update stock' });
   }
 });
 
-router.get('/:productId/stock', auth, async (req, res) => {
+// Get stock movements - Simplified
+router.get('/:productId/movements', async (req, res) => {
   try {
-    const { rows } = await db.query(
-      'SELECT stock FROM inventory WHERE product_id = $1',
-      [req.params.productId]
-    );
-    res.json(rows[0]);
+    const movements = await db`
+      SELECT id, product_id, type, quantity, notes, created_at
+      FROM stock_movements 
+      WHERE product_id = ${req.params.productId}
+      ORDER BY created_at DESC
+    `;
+    res.json(movements);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch inventory stock' });
+    console.error('Get movements error:', error);
+    res.status(500).json({ error: 'Failed to fetch movements' });
   }
 });
 
-router.post('/:productId/adjust', auth, async (req, res) => {
-  const { adjustment } = req.body;
+// Add stock movement
+router.post('/:productId/movements', async (req, res) => {
   try {
-    const { rows } = await db.query(
-      'UPDATE inventory SET stock = stock + $1, updated_at = NOW() WHERE product_id = $2 RETURNING *',
-      [adjustment, req.params.productId]
-    );
-    res.json(rows[0]);
+    const [movement] = await db`
+      INSERT INTO stock_movements (
+        product_id, type, quantity, notes
+      ) VALUES (
+        ${req.params.productId},
+        ${req.body.type},
+        ${req.body.quantity},
+        ${req.body.notes}
+      )
+      RETURNING *
+    `;
+    res.status(201).json(movement);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to adjust inventory' });
+    res.status(500).json({ error: 'Failed to create movement' });
+  }
+});
+
+// Get low stock alerts
+router.get('/low-stock', async (req, res) => {
+  try {
+    const alerts = await db`
+      SELECT p.id, p.name, i.stock, i.minimum_stock
+      FROM inventory i
+      JOIN products p ON p.id = i.product_id
+      WHERE i.stock <= i.minimum_stock
+    `;
+    res.json(alerts);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch low stock alerts' });
   }
 });
 

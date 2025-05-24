@@ -1,0 +1,3 @@
+// - product-workflow.test.ts (create -> publish -> update -> archive)
+// - order-workflow.test.ts (create -> process -> fulfill)
+// - inventory-tracking.test.ts
