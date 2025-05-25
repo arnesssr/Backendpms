@@ -1,33 +1,37 @@
-import { Request, Response } from 'express'
-import { db } from '../config/database'
+import { Request, Response } from 'express';
+import { db } from '../config/database';
 
 export const inventoryController = {
   async updateStock(req: Request, res: Response) {
-    const { id } = req.params
-    const { stock } = req.body
+    const { id } = req.params;
+    const { stock } = req.body;
     
     try {
-      const { rows } = await db.query(
-        'UPDATE inventory SET stock = $1, updated_at = NOW() WHERE product_id = $2 RETURNING *',
-        [stock, id]
-      )
-      res.json(rows[0])
+      const [updated] = await db`
+        UPDATE inventory 
+        SET 
+          stock = ${stock}, 
+          updated_at = NOW() 
+        WHERE product_id = ${id}
+        RETURNING *
+      `;
+      res.json(updated);
     } catch (error) {
-      console.error('Error updating inventory:', error)
-      res.status(500).json({ error: 'Failed to update inventory' })
+      console.error('Error updating inventory:', error);
+      res.status(500).json({ error: 'Failed to update inventory' });
     }
   },
 
   async getProductStock(req: Request, res: Response) {
-    const { id } = req.params
+    const { id } = req.params;
     try {
-      const { rows } = await db.query(
-        'SELECT * FROM inventory WHERE product_id = $1',
-        [id]
-      )
-      res.json(rows[0])
+      const [inventory] = await db`
+        SELECT * FROM inventory 
+        WHERE product_id = ${id}
+      `;
+      res.json(inventory);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch inventory' })
+      res.status(500).json({ error: 'Failed to fetch inventory' });
     }
   },
 
@@ -36,10 +40,10 @@ export const inventoryController = {
       const [stock] = await db`
         SELECT * FROM inventory 
         WHERE product_id = ${req.params.id}
-      `
-      res.json(stock || { stock: 0 })
+      `;
+      res.json(stock || { stock: 0 });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch stock' })
+      res.status(500).json({ error: 'Failed to fetch stock' });
     }
   }
-}
+};

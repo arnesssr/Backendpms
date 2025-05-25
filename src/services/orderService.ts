@@ -1,31 +1,25 @@
 import { db } from '../config/database';
-import { Order, CreateOrderDTO } from '../types/order';
+import { Order, OrderItem, CreateOrderDTO } from '../types/models/order.types';
 
 export const orderService = {
   async createOrder(data: CreateOrderDTO) {
-    // Use postgres.js transaction
     return await db.begin(async (sql) => {
-      // Create order
       const [order] = await sql`
         INSERT INTO orders (
           customer_name, 
           customer_email, 
-          status, 
           total
         ) VALUES (
-          ${data.customerName},
-          ${data.customerEmail},
-          'pending',
+          ${data.customerName}, 
+          ${data.customerEmail}, 
           ${data.total}
-        ) 
-        RETURNING *
+        ) RETURNING *
       `;
 
-      // Create order items
-      if (data.items.length > 0) {
+      if (data.items?.length) {
         await sql`
           INSERT INTO order_items ${sql(
-            data.items.map(item => ({
+            data.items.map((item: OrderItem) => ({
               order_id: order.id,
               product_id: item.productId,
               quantity: item.quantity,
