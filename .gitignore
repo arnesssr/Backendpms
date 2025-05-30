@@ -29,6 +29,7 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+.github/instructions.yaml
 
 # OS files
 .DS_Store

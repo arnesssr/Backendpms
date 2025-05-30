@@ -1,11 +1,14 @@
 import { Router, Request, Response } from 'express';
-import sql from '../config/database';  // Changed from { db }
+import { db } from '../config/database';
+import { handleImageUpload, validateImages } from '../middleware/imageUploadMiddleware';
+import { productController } from '../controllers/productController';
 
 const router = Router();
 
+// Get all published products
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const products = await sql`
+    const products = await db`
       SELECT * FROM products 
       WHERE status = 'published'
     `;
@@ -16,28 +19,64 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/', async (req: Request, res: Response) => {
-  try {
-    const { name, price, description, category, status = 'draft' } = req.body;
-    const result = await sql`
-      INSERT INTO products (
-        name, price, description, category, status
-      ) VALUES (
-        ${name}, ${price}, ${description}, ${category}, ${status}
-      )
-      RETURNING *
-    `;
-    res.status(201).json(result[0]);
-  } catch (error) {
-    console.error('Create product error:', error);
-    res.status(500).json({ error: 'Failed to create product' });
-  }
-});
+// Create new product (draft)
+router.post('/', 
+  handleImageUpload('images'), 
+  validateImages, 
+  async (req: Request, res: Response) => {
+    try {
+      const { name, description, price, category, status, stock, image_urls } = req.body;
 
+      // Basic validation
+      if (!name || !price || !category) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      // Create product
+      const [product] = await db`
+        INSERT INTO products ${db({
+          name,
+          description,
+          price,
+          category,
+          status: status || 'draft',
+          stock: stock || 0,
+          image_urls: image_urls || []
+        })}
+        RETURNING *
+      `;
+      
+      res.status(201).json(product);
+    } catch (error) {
+      console.error('Create product error:', error);
+      res.status(500).json({ error: 'Failed to create product' });
+    }
+  }
+);
+
+// Update existing product
+router.put('/:id',
+  handleImageUpload('images'),
+  productController.updateProduct
+);
+
+// Publish product
+router.post('/:id/publish',
+  productController.publishProduct
+);
+
+// Handle image uploads separately
+router.post('/images',
+  handleImageUpload('images'),
+  validateImages,
+  productController.uploadImages
+);
+
+// Get product by ID
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const product = await sql`
+    const product = await db`
       SELECT * FROM products 
       WHERE id = ${id}
     `;
@@ -51,43 +90,11 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-router.put('/:id', async (req: Request, res: Response) => {
-  try {
-    const { name, price, description } = req.body;
-    
-    // Parse price to number if provided
-    const updates = {
-      ...(name && { name }),
-      ...(price && { price: Number(price) }),
-      ...(description && { description })
-    };
-
-    const [updated] = await sql`
-      UPDATE products 
-      SET ${sql(updates)}
-      WHERE id = ${req.params.id}
-      RETURNING *
-    `;
-
-    if (!updated) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    // Ensure price is returned as number
-    res.json({
-      ...updated,
-      price: Number(updated.price)
-    });
-  } catch (error) {
-    console.error('Update product error:', error);
-    res.status(500).json({ error: 'Failed to update product' });
-  }
-});
-
+// Delete product
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const result = await sql`
+    const result = await db`
       DELETE FROM products 
       WHERE id = ${id}
       RETURNING *

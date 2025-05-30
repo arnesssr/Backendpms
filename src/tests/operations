@@ -1,4 +1,0 @@
-- crud.test.ts          // Test basic CRUD operations
-- queries.test.ts       // Test complex queries
-- pooling.test.ts      // Test connection pooling
-- errors.test.ts       // Test error handling

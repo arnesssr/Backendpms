@@ -1,4 +1,0 @@
-- connection.test.ts      // Test database connectivity and pooling
-- transactions.test.ts    // Test transaction handling
-- constraints.test.ts     // Test foreign key constraints
-- triggers.test.ts       // Test update_timestamp triggers

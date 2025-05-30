@@ -4,15 +4,16 @@ const config: Config.InitialOptions = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
-  testTimeout: 60000,
+  moduleFileExtensions: ['ts', 'js'],
+  testMatch: [
+    '<rootDir>/src/tests/**/*.test.ts'
+  ],
   verbose: true,
-  detectOpenHandles: true,
-  transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: 'tsconfig.json'
-    }]
-  },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  forceExit: true,
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true,
+  testTimeout: 30000 // Increase from 5000ms to 30000ms
 };
 
 export default config;

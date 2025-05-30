@@ -1,4 +1,0 @@
-- tables.test.ts         // Test table creation and structure
-- relationships.test.ts  // Test table relationships
-- indexes.test.ts       // Test index creation and performance
-- migrations.test.ts    // Test schema migrations

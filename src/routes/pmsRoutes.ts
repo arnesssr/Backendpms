@@ -3,6 +3,37 @@ import { db } from '../config/database';
 
 const router = Router();
 
+// Product Management
+router.post('/products/publish', async (req, res) => {
+  try {
+    const [product] = await db`
+      UPDATE products 
+      SET status = 'published', published_to_storefront = true 
+      WHERE id = ${req.body.productId}
+      RETURNING *
+    `;
+    res.json(product);
+  } catch (error) {
+    console.error('Publish error:', error);
+    res.status(500).json({ error: 'Failed to publish product' });
+  }
+});
+
+// Inventory Sync
+router.post('/inventory/sync', async (req, res) => {
+  try {
+    const [inventory] = await db`
+      UPDATE inventory 
+      SET stock = ${req.body.stock}
+      WHERE product_id = ${req.body.productId}
+      RETURNING *
+    `;
+    res.json(inventory);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to sync inventory' });
+  }
+});
+
 // Sync product to storefront
 router.post('/sync/product', async (req, res) => {
   try {

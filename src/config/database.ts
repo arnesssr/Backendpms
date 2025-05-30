@@ -25,5 +25,26 @@ export const dbConnect = async () => {
   }
 };
 
+// Add test query
+export const testConnection = async () => {
+  try {
+    const result = await sql`SELECT NOW()`;
+    console.log('✅ Supabase connection successful:', result);
+    
+    // Test tables exist
+    const tables = await sql`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public'
+    `;
+    console.log('📋 Available tables:', tables.map(t => t.table_name));
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Database connection error:', error);
+    return false;
+  }
+};
+
 export const db = sql;
 export default sql;

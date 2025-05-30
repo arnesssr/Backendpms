@@ -58,5 +58,14 @@ export const auth: AuthHandler = async (req, res, next) => {
   }
 }
 
+// Validate API Key middleware
+export const validateApiKey = (req: Request, res: Response, next: NextFunction) => {
+  const apiKey = req.headers['x-api-key'];
+  if (!apiKey || apiKey !== process.env.API_KEY) {
+    return res.status(401).json({ error: 'API key is required' });
+  }
+  next();
+};
+
 // Export type for use in routes
 export type AuthMiddleware = typeof auth
