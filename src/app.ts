@@ -65,9 +65,3 @@ app.get('/health', (req, res) => {
 
 // Error handler should be last
 app.use(errorHandler);
-
-export const server = app.listen(process.env.PORT || 5000, () => {
-  console.log(`\n🚀 Server is running:
-- Local: http://localhost:${process.env.PORT || 5000}
-- PMS URL: http://localhost:5173`)
-})

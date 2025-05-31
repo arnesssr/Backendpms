@@ -23,11 +23,31 @@ async function startServer() {
     await dbConnect();
     console.log('✅ Database connected successfully');
     
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`\n🚀 Server is running:
 - Local: http://localhost:${PORT}
 - PMS URL: ${process.env.PMS_URL}
 - Test endpoint: http://localhost:${PORT}/api/test/test-product`);
+    });
+
+    // Handle server errors
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EADDRINUSE') {
+        console.log(`⚠️ Port ${PORT} is already in use`);
+        // Try a different port or exit gracefully
+        process.exit(1);
+      } else {
+        console.error('Server error:', error);
+      }
+    });
+
+    // Handle graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received. Shutting down gracefully...');
+      server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+      });
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

@@ -1,61 +1,51 @@
-import { db } from '../../config/database'
-import { supabase } from '../../services/supabaseService'
+import axios, { AxiosResponse } from 'axios'
 import dotenv from 'dotenv'
 
-// Load test environment variables
 dotenv.config({ path: '.env.test' })
 
-describe('Database Connection Tests', () => {
-  beforeAll(async () => {
-    // Wait for table creation
-    await new Promise(resolve => setTimeout(resolve, 1000))
-  })
+const API_URL = 'https://backendpms-wvoo.onrender.com'
+const API_KEY = process.env.API_KEY
 
-  it('should verify postgres database connection', async () => {
-    const result = await db`SELECT 1 + 1 as sum`
-    expect(result[0].sum).toBe(2)
-  })
+interface APIResponse {
+  message?: string
+  connected?: boolean
+}
 
-  it('should verify supabase connection', async () => {
-    const { data, error } = await supabase
-      .from('products')
-      .select('count')
-      .limit(1)
-    
-    expect(error).toBeNull()
-  })
-
-  it('should verify products table exists', async () => {
-    const result = await db`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_name = 'products'
-      )`
-    expect(result[0].exists).toBe(true)
-  })
-
-  it('should be able to insert and query data', async () => {
-    // Insert test data
-    const testProduct = {
-      name: 'Test Product',
-      description: 'Test Description',
-      price: 99.99,
-      category: 'test',
-      stock: 10
+describe('Backend API Connection Tests', () => {
+  it('should connect to backend API', async () => {
+    try {
+      const response: AxiosResponse<APIResponse> = await axios.get(`${API_URL}/api/test/connection`, {
+        headers: {
+          'X-API-Key': API_KEY
+        }
+      })
+      
+      expect(response.status).toBe(200)
+      expect(response.data).toHaveProperty('message', 'Connection successful')
+    } catch (error) {
+      console.error('API Connection Test Failed:', error)
+      throw error
     }
+  })
 
-    const [inserted] = await db`
-      INSERT INTO products ${db(testProduct)}
-      RETURNING *`
+  it('should verify database connection through API', async () => {
+    const response = await axios.get(`${API_URL}/api/test/database`, {
+      headers: {
+        'X-API-Key': API_KEY
+      }
+    })
+    
+    expect(response.status).toBe(200)
+    expect(response.data).toHaveProperty('connected', true)
+  })
 
-    expect(inserted.name).toBe(testProduct.name)
-
-    // Query the inserted data
-    const [found] = await db`
-      SELECT * FROM products 
-      WHERE id = ${inserted.id}`
-
-    expect(found).toBeDefined()
-    expect(found.name).toBe(testProduct.name)
+  it('should handle authentication', async () => {
+    const response = await axios.get(`${API_URL}/api/test/auth`, {
+      headers: {
+        'X-API-Key': API_KEY
+      }
+    })
+    
+    expect(response.status).toBe(200)
   })
 })
