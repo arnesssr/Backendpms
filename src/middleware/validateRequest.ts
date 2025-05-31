@@ -7,7 +7,13 @@ export const validateRequest = (schema: ZodSchema) => {
       await schema.parseAsync(req.body);
       next();
     } catch (error) {
-      res.status(400).json({ errors: error.errors });
+      // Fix: Type assertion for error
+      if (error instanceof Error) {
+        res.status(400).json({ error: error.message });
+      } else {
+        // Handle unknown error type
+        res.status(400).json({ error: 'Invalid request data' });
+      }
     }
   };
 };

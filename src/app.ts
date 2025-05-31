@@ -11,7 +11,7 @@ import { requestLogger } from './middleware/requestLogger';
 import { errorHandler } from './middleware/errorHandler';
 import testRoutes from './routes/testRoutes';
 
-const app = express();
+export const app = express();
 
 // Add request logging middleware before other middleware
 app.use((req, res, next) => {
@@ -66,9 +66,8 @@ app.get('/health', (req, res) => {
 // Error handler should be last
 app.use(errorHandler);
 
-const server = app.listen(process.env.PORT, () => {
-  server.keepAliveTimeout = 60000; // Milliseconds to keep connections alive
-  server.headersTimeout = 65000; // Slightly higher than keepAliveTimeout
-});
-
-export { app };
+export const server = app.listen(process.env.PORT || 5000, () => {
+  console.log(`\n🚀 Server is running:
+- Local: http://localhost:${process.env.PORT || 5000}
+- PMS URL: http://localhost:5173`)
+})

@@ -25,14 +25,14 @@ router.post('/',
   validateImages, 
   async (req: Request, res: Response) => {
     try {
-      const { name, description, price, category, status, stock, image_urls } = req.body;
+      const { name, description, price, category, status, stock } = req.body;
 
-      // Basic validation
+      // Basic validation - removed image requirement
       if (!name || !price || !category) {
-        return res.status(400).json({ error: 'Missing required fields' });
+        return res.status(400).json({ error: 'Required fields: name, price, category' });
       }
 
-      // Create product
+      // Create product with default empty image array
       const [product] = await db`
         INSERT INTO products ${db({
           name,
@@ -41,7 +41,7 @@ router.post('/',
           category,
           status: status || 'draft',
           stock: stock || 0,
-          image_urls: image_urls || []
+          image_urls: []  // Default empty array
         })}
         RETURNING *
       `;
