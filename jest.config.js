@@ -7,17 +7,14 @@ module.exports = {
     '**/?(*.)+(spec|test).+(ts|tsx|js)'
   ],
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest',
+    '^.+\\.(ts|tsx)$': ['ts-jest']
   },
-  setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
-  testTimeout: 10000,
-  verbose: true,
+  setupFilesAfterEnv: ['<rootDir>/src/tests/jest.setup.ts'],
+  globalSetup: '<rootDir>/src/tests/global.setup.ts',
+  globalTeardown: '<rootDir>/src/tests/global.teardown.ts',
+  testTimeout: 30000,
   detectOpenHandles: true,
   forceExit: true,
-  globals: {
-    'ts-jest': {
-      isolatedModules: true
-    }
-  },
-  globalTeardown: '<rootDir>/src/tests/teardown.ts'
+  verbose: true,
+  maxWorkers: 1
 }

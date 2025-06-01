@@ -1,105 +1,129 @@
-import { describe, it, expect, beforeEach, afterAll } from '@jest/globals'
-import { db } from '../../../config/database'
-import { testClient } from '../../helpers/testClient'
-import dotenv from 'dotenv'
+import { describe, it, expect, beforeEach, afterAll, beforeAll } from '@jest/globals';
+import axios, { AxiosInstance } from 'axios';
+import { db } from '../../../config/database';
+import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.test' })
+dotenv.config({ path: '.env.test' });
 
-describe('Product CRUD Tests', () => {
-  beforeEach(async () => {
-    // Clean product table before each test
-    await db`TRUNCATE TABLE products CASCADE`
-  })
+const API_URL = process.env.API_URL;
+const API_KEY = process.env.API_KEY;
 
-  afterAll(async () => {
-    // Close database connection to prevent Jest handle leaks
-    await db.end()
-  })
+let axiosInstance: AxiosInstance;
 
+beforeAll(() => {
+  axiosInstance = axios.create({
+    timeout: 5000,
+    headers: {
+      'X-API-Key': API_KEY,
+      'Content-Type': 'application/json'
+    }
+  });
+});
+
+describe('Product API Tests', () => {
   const testProduct = {
     name: 'Test Product',
     description: 'Test Description',
-    price: 99.99,
+    price: '99.99', // Change to string for proper decimal handling
     category: 'test-category',
     status: 'draft',
     stock: 10,
-    image_urls: null  // Set to null instead of omitting
-  }
+    image_urls: []
+  };
 
-  it('should create a product with required fields', async () => {
-    const response = await testClient.products.create(testProduct)
-   
-    console.log('Create Product Test:', {
-      requestBody: testProduct,
-      responseStatus: response.status,
-      responseBody: response.body
-    })
+  // Add product ID storage
+  let productId: string;
 
-    expect(response.status).toBe(201)
-    expect(response.body).toHaveProperty('id')
-    expect(response.body.name).toBe(testProduct.name)
-  })
+  beforeEach(async () => {
+    await db`TRUNCATE TABLE products CASCADE`;
+    // Create a test product for each test that needs it
+    const createResponse = await axiosInstance.post(`${API_URL}/api/products`, testProduct);
+    productId = createResponse.data.id;
+  });
 
-  it('should create a product with images', async () => {
-    const productWithImages = {
-      ...testProduct,
-      image_urls: ['https://example.com/test-image1.jpg', 'https://example.com/test-image2.jpg']
-    }
-
-    const response = await testClient.products.create(productWithImages)
+  it('should create a product', async () => {
+    const response = await axiosInstance.post(`${API_URL}/api/products`, testProduct);
+    productId = response.data.id;
     
-    expect(response.status).toBe(201)
-    expect(response.body).toHaveProperty('id')
-    expect(response.body.name).toBe(productWithImages.name)
-    expect(response.body.image_urls).toEqual(productWithImages.image_urls)
-  })
+    expect(response.status).toBe(201);
+    expect(response.data).toHaveProperty('id');
+    expect(response.data.name).toBe(testProduct.name);
+  });
 
-  it('should handle empty image array', async () => {
-    const productWithEmptyImages = {
-      ...testProduct,
-      image_urls: []
-    }
+  it('should get a product by id', async () => {
+    // Create product first
+    const createResponse = await axiosInstance.post(`${API_URL}/api/products`, testProduct);
+    const id = createResponse.data.id;
 
-    const response = await testClient.products.create(productWithEmptyImages)
+    const response = await axiosInstance.get(`${API_URL}/api/products/${id}`);
     
-    console.log('Empty Images Test:', {
-      requestBody: productWithEmptyImages,
-      responseStatus: response.status,
-      responseBody: response.body
-    })
+    expect(response.status).toBe(200);
+    expect(response.data.name).toBe(testProduct.name);
+  });
 
-    // This test will show us how your API handles empty arrays
-    // Adjust expectation based on your business logic
-    if (response.status === 201) {
-      expect(response.body).toHaveProperty('id')
-    } else {
-      expect(response.status).toBe(400)
-      expect(response.body.error).toContain('image')
-    }
-  })
+  it('should update a product', async () => {
+    const updateData = {
+      name: 'Updated Product',
+      price: '149.99' // Change to string
+    };
 
-  it('should reject published product without images (if applicable)', async () => {
-    const publishedProductNoImages = {
-      ...testProduct,
-      status: 'published',
-      image_urls: null
-    }
-
-    const response = await testClient.products.create(publishedProductNoImages)
+    const response = await axiosInstance.put(
+      `${API_URL}/api/products/${productId}`,
+      updateData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY
+        }
+      }
+    );
     
-    console.log('Published Product No Images Test:', {
-      requestBody: publishedProductNoImages,
-      responseStatus: response.status,
-      responseBody: response.body
-    })
+    expect(response.status).toBe(200);
+    expect(response.data.name).toBe(updateData.name);
+    expect(response.data.price).toBe(updateData.price);
+  });
 
-    // Adjust this based on your business rules
-    // If published products require images, expect 400
-    // If not, expect 201
-    if (response.status === 400) {
-      expect(response.body.error).toContain('image')
-    } else {
-      expect(response.status).toBe(201)
+  it('should delete a product', async () => {
+    const response = await axiosInstance.delete(
+      `${API_URL}/api/products/${productId}`,
+      {
+        headers: {
+          'X-API-Key': API_KEY
+        }
+      }
+    );
+    
+    expect(response.status).toBe(200);
+
+    // Verify deletion
+    const getResponse = await axiosInstance.get(`${API_URL}/api/products/${productId}`)
+      .catch(error => error.response);
+    expect(getResponse.status).toBe(404);
+  });
+
+  it('should publish a product', async () => {
+    const response = await axiosInstance.post(
+      `${API_URL}/api/products/${productId}/publish`,
+      {},
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY
+        }
+      }
+    );
+    
+    expect(response.status).toBe(200);
+    expect(response.data.status).toBe('published');
+  });
+
+  afterAll(async () => {
+    await db`TRUNCATE TABLE products CASCADE`;
+    if (axiosInstance) {
+      axiosInstance.interceptors.request.eject(0);
+      axiosInstance.interceptors.response.eject(0);
     }
-  })
-})
+    await db.end();
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  });
+});

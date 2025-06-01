@@ -37,4 +37,30 @@ router.get('/auth', (req, res) => {
   });
 });
 
+// Database reset endpoint for tests
+router.post('/reset-db', async (req, res) => {
+  try {
+    await db`TRUNCATE TABLE products CASCADE`;
+    res.json({ message: 'Database reset successful' });
+  } catch (error) {
+    console.error('Reset DB error:', error);
+    res.status(500).json({ error: 'Failed to reset database' });
+  }
+});
+
+// Add debug endpoint
+router.get('/debug', async (req, res) => {
+  try {
+    const [result] = await db`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'published') as published
+      FROM products
+    `;
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Debug query failed' });
+  }
+});
+
 export default router;
