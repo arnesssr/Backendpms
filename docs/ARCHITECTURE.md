@@ -1,5 +1,12 @@
 # Backend Architecture Documentation
 
+## Deployment Architecture
+```
+[PMS (Vercel)] ←→ [Backend API (Render)] ←→ [Storefront (Vercel)]
+       ↑                    ↑                         ↑
+   Admin Panel        API Processing            Public Access
+```
+
 ## System Overview
 ```
 [PMS Frontend] ←→ [Backend API] ←→ [Database]
@@ -46,3 +53,14 @@
 - Standardized error responses
 - Error logging
 - Request tracking
+
+## Deployment Considerations
+1. Backend (Render)
+   - Node.js runtime
+   - API gateway
+   - Service orchestration
+
+2. Frontend (Vercel)
+   - PMS: Admin interface
+   - Storefront: Customer interface
+   - Static/serverless deployment
