@@ -7,7 +7,7 @@ import { Request, Response } from 'express';
 setDefaultResultOrder('ipv4first'); 
 dotenv.config();
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000; // Explicitly use port 10000 as fallback
 
 interface HealthResponse {
   status: string;

@@ -48,6 +48,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 
+// Add root route handler before other routes
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Backend PMS API',
+    docs: '/api/docs',
+    health: '/health'
+  });
+});
+
 // Test routes should be before protected routes
 app.use('/api/test', testRoutes);
 
