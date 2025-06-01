@@ -1,52 +1,55 @@
-import { describe, it, expect } from '@jest/globals'
-import axios, { AxiosResponse } from 'axios'
+import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
+import axios, { AxiosInstance } from 'axios'
 import dotenv from 'dotenv'
 
 dotenv.config({ path: '.env.test' })
 
-const API_URL = 'https://backendpms-wvoo.onrender.com'
+const API_URL = process.env.API_URL
 const API_KEY = process.env.API_KEY
 
-interface APIResponse {
-  message?: string
-  connected?: boolean
-}
+let axiosInstance: AxiosInstance
+
+beforeAll(() => {
+  axiosInstance = axios.create({
+    timeout: 5000,
+    headers: {
+      'X-API-Key': API_KEY
+    }
+  })
+})
 
 describe('Backend API Connection Tests', () => {
   it('should connect to backend API', async () => {
-    try {
-      const response: AxiosResponse<APIResponse> = await axios.get(`${API_URL}/api/test/connection`, {
-        headers: {
-          'X-API-Key': API_KEY
-        }
-      })
-      
-      expect(response.status).toBe(200)
-      expect(response.data).toHaveProperty('message', 'Connection successful')
-    } catch (error) {
-      console.error('API Connection Test Failed:', error)
-      throw error
-    }
+    const response = await axiosInstance.get(`${API_URL}/api/test/connection`)
+    
+    expect(response.status).toBe(200)
+    expect(response.data).toHaveProperty('message', 'Connection successful')
   })
 
   it('should verify database connection through API', async () => {
-    const response = await axios.get(`${API_URL}/api/test/database`, {
-      headers: {
-        'X-API-Key': API_KEY
-      }
-    })
+    const response = await axiosInstance.get(`${API_URL}/api/test/database`)
     
     expect(response.status).toBe(200)
     expect(response.data).toHaveProperty('connected', true)
   })
 
   it('should handle authentication', async () => {
-    const response = await axios.get(`${API_URL}/api/test/auth`, {
-      headers: {
-        'X-API-Key': API_KEY
-      }
-    })
+    const response = await axiosInstance.get(`${API_URL}/api/test/auth`)
     
     expect(response.status).toBe(200)
   })
+})
+
+afterAll(async () => {
+  if (axiosInstance) {
+    // Cancel any pending requests
+    const controller = new AbortController()
+    axiosInstance.interceptors.request.use((config) => {
+      config.signal = controller.signal
+      return config
+    })
+    controller.abort()
+  }
+  // Allow time for connections to close
+  await new Promise(resolve => setTimeout(resolve, 1000))
 })

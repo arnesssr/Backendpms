@@ -10,8 +10,14 @@ module.exports = {
     '^.+\\.(ts|tsx)$': 'ts-jest',
   },
   setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
-  testTimeout: 60000,
+  testTimeout: 10000,
   verbose: true,
   detectOpenHandles: true,
-  maxConcurrency: 1
+  forceExit: true,
+  globals: {
+    'ts-jest': {
+      isolatedModules: true
+    }
+  },
+  globalTeardown: '<rootDir>/src/tests/teardown.ts'
 }

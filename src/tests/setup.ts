@@ -1,4 +1,4 @@
-import { beforeAll, afterAll } from '@jest/globals';
+import { beforeAll, afterAll, afterEach } from '@jest/globals';
 import dotenv from 'dotenv'
 import { db } from '../config/database'
 
@@ -30,8 +30,20 @@ beforeAll(async () => {
   }
 })
 
+// Increase timeout for async operations
+jest.setTimeout(10000);
+
+// Clear any mocks/timers after each test
+afterEach(() => {
+  jest.clearAllMocks();
+  jest.clearAllTimers();
+});
+
+// Cleanup after all tests
 afterAll(async () => {
-  await db.end()
-})
+  await db.end();
+  // Wait for connections to close
+  await new Promise(resolve => setTimeout(resolve, 500));
+});
 
 export {}
