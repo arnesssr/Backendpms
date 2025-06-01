@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express'
+import type { Request, Response, NextFunction } from 'express'
 import { Clerk } from '@clerk/backend'
 
 // Initialize Clerk with proper typing

@@ -1,4 +1,5 @@
 import express from 'express';
+import { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { db, dbConnect } from './config/database';
 import productRoutes from './routes/productRoutes';

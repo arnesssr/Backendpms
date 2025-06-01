@@ -1,17 +1,17 @@
 {
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
+    "build": "npm run clean && tsc",
     "clean": "rm -rf dist",
-    "postinstall": "npm run build",
     "start": "node dist/server.js",
-    "test": "jest --config jest.config.ts --detectOpenHandles",
-    "test:watch": "jest --watch --config jest.config.ts",
+    "test": "jest --detectOpenHandles",
+    "test:watch": "jest --watch",
     "test:coverage": "vitest --coverage",
-    "test:db": "jest src/tests/integration/database.test.ts --config=jest.config.ts --detectOpenHandles",
+    "test:db": "jest src/tests/db_tests/database.test.ts",
     "test:api": "jest src/tests/integration/api --config=jest.config.ts --detectOpenHandles",
-    "test:products": "jest src/tests/integration/api/products.test.ts --config=jest.config.ts --detectOpenHandles",
-    "migrate": "ts-node src/db/migrate.ts"
+    "test:products": "jest src/tests/integration/products/product-crud.test.ts",
+    "migrate": "ts-node src/db/migrate.ts",
+    "postinstall": "tsc"
   },
   "dependencies": {
     "@clerk/backend": "^0.38.3",
@@ -33,14 +33,26 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@jest/types": "^29.6.3",
+    "@types/body-parser": "^1.19.5",
+    "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.12",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/multer": "^1.4.12",
     "@types/node": "^20.11.19",
+    "@types/pg": "^8.10.9",
     "@types/supertest": "^2.0.16",
-    "@jest/globals": "^29.7.0",
     "jest": "^29.7.0",
     "supertest": "^6.3.4",
     "ts-jest": "^29.1.2",
-    "ts-node-dev": "^2.0.0"
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsc-alias": "^1.8.8",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "@vitest/coverage-v8": "^1.2.0",
+    "happy-dom": "^13.3.8"
   }
 }
