@@ -16,6 +16,21 @@ const headers = {
 }
 
 export const testClient = {
+  connection: {
+    test: () => 
+      axios.get(`${API_URL}/api/test/connection`, { headers })
+        .then(res => ({ status: res.status, body: res.data }))
+  },
+  database: {
+    test: () =>
+      axios.get(`${API_URL}/api/test/database`, { headers })
+        .then(res => ({ status: res.status, body: res.data }))
+  },
+  auth: {
+    test: () =>
+      axios.get(`${API_URL}/api/test/auth`, { headers })
+        .then(res => ({ status: res.status, body: res.data }))
+  },
   products: {
     create: (data: any) => 
       axios.post(`${API_URL}/products`, data, { headers })

@@ -3,50 +3,38 @@ import { db } from '../config/database';
 
 const router = Router();
 
-// Test endpoint
-router.get('/test-product', async (req, res) => {
-  console.log('🟢 Test endpoint hit');
-  console.log('Headers:', req.headers);
-  
+// Connection test endpoint
+router.get('/connection', async (req, res) => {
   try {
-    const testData = {
-      message: 'Test endpoint working',
+    res.json({
+      message: 'Connection successful',
       timestamp: new Date().toISOString()
-    };
-    res.json(testData);
+    });
   } catch (error) {
-    console.error('❌ Test endpoint error:', error);
-    res.status(500).json({ error: 'Test endpoint failed' });
+    res.status(500).json({ error: 'Connection test failed' });
   }
 });
 
-router.post('/test-product', async (req, res) => {
+// Database test endpoint
+router.get('/database', async (req, res) => {
   try {
-    console.log('🔵 Creating test product with data:', req.body);
-    
-    const [product] = await db`
-      INSERT INTO products (
-        name,
-        description,
-        price,
-        category,
-        status
-      ) VALUES (
-        'Test Product',
-        'Test Description',
-        99.99,
-        'books',
-        'draft'
-      )
-      RETURNING *
-    `;
-
-    console.log('✅ Test product created:', product);
-    res.status(201).json(product);
+    await db`SELECT 1+1 AS result`;
+    res.json({
+      connected: true,
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
-    console.error('❌ Test product creation failed:', error);
-    res.status(500).json({ error: 'Failed to create test product' });
+    res.status(500).json({ error: 'Database connection failed' });
   }
+});
+
+// Auth test endpoint
+router.get('/auth', (req, res) => {
+  // API Key middleware will handle authentication
+  res.json({
+    authenticated: true,
+    timestamp: new Date().toISOString()
+  });
 });
 
 export default router;
