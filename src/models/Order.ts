@@ -1,29 +1,32 @@
 import { z } from 'zod'
 
+export const OrderStatus = z.enum([
+  'pending',
+  'processing',
+  'completed',
+  'cancelled',
+  'refunded'
+])
+
+export type OrderStatus = z.infer<typeof OrderStatus>
+
 export const OrderItemSchema = z.object({
-  id: z.string().uuid(),
-  productId: z.string().uuid(),
-  productName: z.string(),
+  id: z.string().uuid().optional(),
+  order_id: z.string().uuid().optional(),
+  product_id: z.string().uuid(),
   quantity: z.number().positive(),
-  unitPrice: z.number().positive(),
-  subtotal: z.number().positive()
+  unit_price: z.number().positive(),
+  created_at: z.date().optional()
 })
 
 export const OrderSchema = z.object({
-  id: z.string().uuid(),
-  orderNumber: z.string(),
-  customerName: z.string(),
-  customerEmail: z.string().email(),
-  status: z.enum(['pending', 'processing', 'completed', 'cancelled']),
-  paymentStatus: z.enum(['pending', 'paid', 'failed', 'refunded']),
+  id: z.string().uuid().optional(),
+  customer_email: z.string().email(),
+  status: OrderStatus.default('pending'),
+  total_amount: z.number().positive(),
   items: z.array(OrderItemSchema),
-  subtotal: z.number().positive(),
-  tax: z.number().min(0),
-  total: z.number().positive(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  completedAt: z.string().datetime().optional(),
-  notes: z.string().optional()
+  created_at: z.date().optional(),
+  updated_at: z.date().optional()
 })
 
 export type Order = z.infer<typeof OrderSchema>

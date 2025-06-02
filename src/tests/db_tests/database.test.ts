@@ -1,69 +1,91 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
-import axios, { AxiosInstance } from 'axios'
-import https from 'https'
+import postgres from 'postgres'
 import dotenv from 'dotenv'
 
 dotenv.config({ path: '.env.test' })
 
-const API_URL = process.env.API_URL
-const API_KEY = process.env.API_KEY
+const DATABASE_URL = process.env.DATABASE_POOL_URL || process.env.DATABASE_URL
+if (!DATABASE_URL) {
+  throw new Error('Database URL not configured')
+}
 
-let axiosInstance: AxiosInstance
-let httpsAgent: https.Agent
-
-beforeAll(() => {
-  httpsAgent = new https.Agent({ keepAlive: false })
-  axiosInstance = axios.create({
-    timeout: 15000,
-    httpsAgent,
-    headers: {
-      'X-API-Key': API_KEY
-    },
-    validateStatus: (status) => status < 500 // Don't throw on 4xx errors
-  })
+const sql = postgres(DATABASE_URL, {
+  ssl: { rejectUnauthorized: false },
+  idle_timeout: 20,
+  max: 10,
+  connection: {
+    application_name: 'pms_test'
+  }
 })
 
-describe('Backend API Connection Tests', () => {
-  const testWithRetry = async (fn: () => Promise<any>, retries = 3) => {
-    for (let i = 0; i < retries; i++) {
-      try {
-        return await fn()
-      } catch (error) {
-        if (i === retries - 1) throw error
-        await new Promise(resolve => setTimeout(resolve, 1000))
-      }
+describe('Database Connection Tests', () => {
+  beforeAll(async () => {
+    try {
+      // Create products table if not exists
+      await sql`
+        CREATE TABLE IF NOT EXISTS products (
+          id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT,
+          price DECIMAL(10,2) NOT NULL,
+          category TEXT NOT NULL,
+          status TEXT DEFAULT 'draft',
+          stock INTEGER DEFAULT 0,
+          image_urls TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+          created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        )
+      `
+      console.log('✅ Products table initialized')
+    } catch (error) {
+      console.error('❌ Table creation failed:', error)
+      throw error
     }
-  }
-
-  it('should connect to backend API', async () => {
-    await testWithRetry(async () => {
-      const response = await axiosInstance.get(`${API_URL}/api/test/connection`)
-      
-      expect(response.status).toBe(200)
-      expect(response.data).toHaveProperty('message', 'Connection successful')
-    })
-  }, 30000) // Test timeout
-
-  it('should verify database connection through API', async () => {
-    const response = await axiosInstance.get(`${API_URL}/api/test/database`)
-    
-    expect(response.status).toBe(200)
-    expect(response.data).toHaveProperty('connected', true)
   })
 
-  it('should handle authentication', async () => {
-    const response = await axiosInstance.get(`${API_URL}/api/test/auth`)
-    
-    expect(response.status).toBe(200)
+  it('should connect to Supabase database', async () => {
+    try {
+      const result = await sql`SELECT NOW()`
+      console.log('Database connection successful:', result[0].now)
+      expect(result[0].now).toBeTruthy()
+    } catch (error) {
+      console.error('Connection failed:', error)
+      throw error
+    }
   })
-})
 
-afterAll(async () => {
-  httpsAgent.destroy()
-  await new Promise(resolve => setTimeout(resolve, 500))
-  // Force close all connections
-  if (axiosInstance) {
-    axiosInstance.interceptors.request.eject(0)
-    axiosInstance.interceptors.response.eject(0)
-  }
+  it('should verify products table exists', async () => {
+    const result = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'products'
+      )`
+    expect(result[0].exists).toBe(true)
+  })
+
+  it('should verify categories table exists', async () => {
+    const result = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'categories'
+      )`
+    expect(result[0].exists).toBe(true)
+  })
+
+  it('should verify products table structure', async () => {
+    const result = await sql`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'products'
+    `
+    expect(result.length).toBeGreaterThan(0)
+    expect(result.some(col => col.column_name === 'image_urls')).toBe(true)
+  })
+
+  afterAll(async () => {
+    await sql.end()
+    await new Promise(resolve => setTimeout(resolve, 1000))
+  })
 })

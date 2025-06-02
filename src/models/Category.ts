@@ -1,13 +1,16 @@
-import { z } from 'zod'
+import { z } from 'zod';
+
+export const CategoryStatus = z.enum(['active', 'inactive', 'archived']);
+export type CategoryStatus = z.infer<typeof CategoryStatus>;
 
 export const CategorySchema = z.object({
-  id: z.string(),
-  name: z.string().min(1).max(255),
-  description: z.string(),
-  imageUrl: z.string().url().optional(),
-  parentId: z.string().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime()
-})
+  id: z.string().uuid(),
+  name: z.string().min(2).max(100),
+  description: z.string().optional(),
+  status: CategoryStatus.default('active'),
+  product_count: z.number().default(0),
+  created_at: z.date().optional(),
+  updated_at: z.date().optional()
+});
 
-export type Category = z.infer<typeof CategorySchema>
+export type Category = z.infer<typeof CategorySchema>;

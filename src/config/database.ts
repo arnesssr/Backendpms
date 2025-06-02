@@ -1,50 +1,136 @@
 import postgres from 'postgres';
 import dotenv from 'dotenv';
-import { type Sql } from 'postgres';
 
+// Load environment variables
 dotenv.config();
 
-if (!process.env.DATABASE_POOL_URL) {
-  throw new Error('DATABASE_POOL_URL is not set');
+// Database configuration interface
+interface DatabaseConfig {
+  max_connections: number;
+  idle_timeout: number;
+  connect_timeout: number;
+  max_lifetime: number;
 }
 
-const sql: Sql = postgres(process.env.DATABASE_POOL_URL, {
-  connect_timeout: 30,
-  idle_timeout: 20
-});
+// Connection metrics interface
+interface ConnectionMetrics {
+  total_connections: number;
+  active_connections: number;
+  idle_connections: number;
+  wait_time: number;
+}
 
+const DEFAULT_CONFIG: DatabaseConfig = {
+  max_connections: 10,
+  idle_timeout: 30,
+  connect_timeout: 10,
+  max_lifetime: 60 * 30 // 30 minutes
+}
+
+// Get appropriate connection URL based on environment
+const DATABASE_URL = process.env.NODE_ENV === 'test'
+  ? process.env.DATABASE_POOL_URL
+  : process.env.DATABASE_URL
+
+if (!DATABASE_URL) {
+  throw new Error('Database connection URL not configured')
+}
+
+// Create database instance with enhanced configuration
+export const db = postgres(DATABASE_URL, {
+  ssl: { rejectUnauthorized: false },
+  idle_timeout: DEFAULT_CONFIG.idle_timeout,
+  max: DEFAULT_CONFIG.max_connections,
+  connect_timeout: DEFAULT_CONFIG.connect_timeout,
+  max_lifetime: DEFAULT_CONFIG.max_lifetime,
+  debug: process.env.NODE_ENV === 'development',
+  onnotice: (notice) => {
+    console.log('Database Notice:', notice)
+  },
+  onparameter: (parameterStatus) => {
+    console.log('Parameter Status:', parameterStatus)
+  }
+})
+
+// Connection monitoring
+let metrics: ConnectionMetrics = {
+  total_connections: 0,
+  active_connections: 0,
+  idle_connections: 0,
+  wait_time: 0
+}
+
+// Connection health check
 export const dbConnect = async () => {
   try {
-    console.log('Attempting database connection...');
-    const result = await sql`SELECT NOW()`;
-    console.log('Database connected successfully at:', result[0].now);
-    return true;
-  } catch (error) {
-    console.error('Database connection error:', error);
-    throw error;
-  }
-};
+    console.log('Verifying database connection...')
+    const startTime = Date.now()
+    const result = await db`SELECT version()`
+    const endTime = Date.now()
 
-// Add test query
-export const testConnection = async () => {
+    metrics.wait_time = endTime - startTime
+    console.log('Database connected:', result[0].version)
+    return true
+  } catch (error) {
+    console.error('Database connection failed:', error)
+    throw error
+  }
+}
+
+// Get connection metrics
+export const getConnectionMetrics = () => {
+  return metrics
+}
+
+// Health check with detailed status
+export const getDatabaseHealth = async () => {
   try {
-    const result = await sql`SELECT NOW()`;
-    console.log('✅ Supabase connection successful:', result);
-    
-    // Test tables exist
-    const tables = await sql`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public'
-    `;
-    console.log('📋 Available tables:', tables.map(t => t.table_name));
-    
-    return true;
-  } catch (error) {
-    console.error('❌ Database connection error:', error);
-    return false;
-  }
-};
+    const startTime = Date.now()
+    await db`SELECT 1`
+    const responseTime = Date.now() - startTime
 
-export const db = sql;
-export default sql;
+    return {
+      status: 'healthy',
+      responseTime,
+      metrics,
+      lastChecked: new Date().toISOString()
+    }
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : 'Unknown database error';
+
+    return {
+      status: 'unhealthy',
+      error: errorMessage,
+      lastChecked: new Date().toISOString()
+    }
+  }
+}
+
+// Graceful shutdown
+export const closeDatabase = async () => {
+  try {
+    console.log('Closing database connections...')
+    await db.end()
+    console.log('Database connections closed')
+  } catch (error) {
+    console.error('Error closing database:', error)
+    throw error
+  }
+}
+
+// Event handlers for process termination
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, closing database connections...')
+  await closeDatabase()
+  process.exit(0)
+})
+
+process.on('SIGINT', async () => {
+  console.log('SIGINT received, closing database connections...')
+  await closeDatabase()
+  process.exit(0)
+})
+
+export default db;

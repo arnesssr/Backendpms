@@ -9,12 +9,13 @@ module.exports = {
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest']
   },
+  setupFiles: ['dotenv/config'],
   setupFilesAfterEnv: ['<rootDir>/src/tests/jest.setup.ts'],
   globalSetup: '<rootDir>/src/tests/global.setup.ts',
   globalTeardown: '<rootDir>/src/tests/global.teardown.ts',
-  testTimeout: 30000,
-  detectOpenHandles: true,
+  testTimeout: 15000,
   forceExit: true,
+  detectOpenHandles: true,
   verbose: true,
   maxWorkers: 1
 }
