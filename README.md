@@ -1,45 +1,160 @@
-# Backend PMS Service
+# PMS Backend Service
 
 Backend service for Product Management System (PMS) and Storefront integration.
 
-## Documentation
-- [Architecture Overview](./docs/ARCHITECTURE.md)
-- [Technical Documentation](./docs/TECHNICAL.md)
-- [Integration Guide](./docs/INTEGRATION.md)
+## 📋 Project Status
 
-## Quick Start
-1. Install dependencies:
+View detailed implementation status and roadmap in [TODO.md](docs/TODO.md)
+
+- Overall Progress: 75% Complete
+- Current Phase: Integration & Event System Implementation
+- Next Milestone: Webhook System & Real-time Updates
+
+## 🏗 Architecture
+
+![Architecture Overview](docs/images/architecture.png)
+
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        PMS["PMS (Vercel)"]
+        SF["Storefront (Vercel)"]
+    end
+    subgraph "Backend Layer"
+        API["API (Render)"]
+        QUEUE["Event Queue"]
+    end
+    subgraph "Database"
+        DB["Supabase"]
+    end
+    PMS --> API
+    SF --> API
+    API --> DB
+    API --> QUEUE
+    QUEUE --> SF
+```
+
+## 🚀 Quick Start
+
 ```bash
+# Install dependencies
 pnpm install
-```
 
-2. Set up environment:
-```bash
+# Set up environment
 cp .env.example .env
-```
 
-3. Start development server:
-```bash
+# Run development server
 pnpm dev
-```
 
-4. Run tests:
-```bash
+# Run tests
 pnpm test
 ```
 
-## Key Features
-- Product Management
-- Inventory Control
-- Image Processing
-- API Authentication
-- Storefront Integration
+## 🔑 API Authentication
 
-## API Documentation
-See [Integration Guide](./docs/INTEGRATION.md) for detailed API documentation.
+- Required: API Key in `X-API-Key` header
+- Generate key: `pnpm generate-key`
 
-## Testing
-See [Technical Documentation](./docs/TECHNICAL.md) for testing strategies.
+## 📦 Core Features
 
-## Security
-See [Architecture Overview](./docs/ARCHITECTURE.md) for security implementation.
+1. Product Management
+   - CRUD operations
+   - Status transitions
+   - Image handling
+
+2. Inventory Control
+   - Stock tracking
+   - Movement history
+   - Alerts system
+
+3. Order Processing
+   - Creation/updates
+   - Status management
+   - Refund handling
+
+## 🔄 Integration Points
+
+### PMS Integration
+- Product publishing workflow
+- Inventory management
+- Order processing
+
+### Storefront Integration
+- Product availability
+- Stock synchronization
+- Order creation
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pnpm test
+
+# Run specific test suite
+pnpm test:unit
+pnpm test:integration
+pnpm test:e2e
+```
+
+## 📚 Documentation
+
+- [Architecture Overview](docs/ARCHITECTURE.md)
+- [API Documentation](docs/API.md)
+- [Database Schema](docs/SCHEMA.md)
+- [Implementation Status](docs/TODO.md)
+
+## 🛠 Development
+
+### Prerequisites
+- Node.js v18+
+- pnpm
+- PostgreSQL (Supabase)
+
+### Environment Setup
+Required environment variables:
+```bash
+DATABASE_URL=          # Supabase connection string
+API_KEY=              # Generated API key
+PMS_URL=              # PMS frontend URL
+STOREFRONT_URL=       # Storefront URL
+```
+
+### Database Migrations
+```bash
+pnpm migrate:latest   # Run migrations
+pnpm migrate:rollback # Rollback last migration
+```
+
+## 🚀 Deployment
+
+Current deployment on Render:
+- URL: https://backendpms-wvoo.onrender.com
+- Auto-deploys from `main` branch
+
+## 📈 Monitoring
+
+- Health Check: `/health`
+- Metrics: `/metrics`
+- Status: `/status`
+
+## 🔜 Next Steps
+
+See [TODO.md](docs/TODO.md) for detailed implementation roadmap.
+
+1. Event Queue System
+2. Webhook Implementation
+3. Real-time Updates
+4. Caching Layer
+5. Rate Limiting
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Create Pull Request
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE)
