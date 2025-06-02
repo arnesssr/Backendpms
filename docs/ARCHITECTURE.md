@@ -1,66 +1,184 @@
 # Backend Architecture Documentation
 
-## Deployment Architecture
+## Complete System Architecture
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        PMS["PMS Admin Interface<br/>(Vercel)"]
+        SF["Storefront<br/>(Vercel)"]
+    end
+
+    subgraph "API Layer"
+        API["Backend API<br/>(Render)"]
+        AUTH["Authentication<br/>Service"]
+        GATE["API Gateway"]
+    end
+
+    subgraph "Service Layer"
+        PROD["Product Service"]
+        CAT["Category Service"]
+        INV["Inventory Service"]
+        ORD["Order Service"]
+        SET["Settings Service"]
+        AUD["Audit Service"]
+    end
+
+    subgraph "Database Layer"
+        DB[(Supabase<br/>PostgreSQL)]
+        CACHE["Redis Cache"]
+    end
+
+    %% Frontend to API Connections
+    PMS -->|"Admin API Calls"| GATE
+    SF -->|"Public API Calls"| GATE
+
+    %% Gateway & Auth
+    GATE -->|"Validate"| AUTH
+    GATE -->|"Route"| API
+
+    %% API to Service Connections
+    API -->|"Product Operations"| PROD
+    API -->|"Category Management"| CAT
+    API -->|"Inventory Control"| INV
+    API -->|"Order Processing"| ORD
+    API -->|"System Settings"| SET
+    API -->|"Audit Logging"| AUD
+
+    %% Service to Database Connections
+    PROD -->|"CRUD"| DB
+    CAT -->|"CRUD"| DB
+    INV -->|"CRUD"| DB
+    ORD -->|"CRUD"| DB
+    SET -->|"CRUD"| DB
+    AUD -->|"Write"| DB
+
+    %% Cache Connections
+    PROD -.->|"Cache"| CACHE
+    CAT -.->|"Cache"| CACHE
+    INV -.->|"Cache"| CACHE
 ```
-[PMS (Vercel)] ←→ [Backend API (Render)] ←→ [Storefront (Vercel)]
-       ↑                    ↑                         ↑
-   Admin Panel        API Processing            Public Access
+
+## Module Interactions
+
+### Product Publishing Flow
+```mermaid
+sequenceDiagram
+    participant PMS
+    participant API
+    participant DB
+    participant SF
+
+    PMS->>API: Publish Product
+    API->>DB: Update Status
+    API->>DB: Log Audit
+    API-->>SF: Webhook Notification
+    SF->>API: Fetch Updated Product
+    API->>DB: Get Product Data
+    API-->>SF: Product Details
 ```
 
-## System Overview
+### Order Processing Flow
+```mermaid
+sequenceDiagram
+    participant SF
+    participant API
+    participant INV
+    participant DB
+    participant PMS
+
+    SF->>API: Create Order
+    API->>DB: Validate Stock
+    API->>INV: Reserve Stock
+    INV->>DB: Update Inventory
+    API->>DB: Create Order
+    API-->>PMS: Order Notification
+    PMS->>API: Process Order
+    API->>DB: Update Status
+    API-->>SF: Order Confirmation
 ```
-[PMS Frontend] ←→ [Backend API] ←→ [Database]
-       ↑                ↑              ↑
-   Admin Users     API Gateway    Data Storage
+
+### Inventory Management Flow
+```mermaid
+sequenceDiagram
+    participant PMS
+    participant API
+    participant INV
+    participant DB
+    participant SF
+
+    PMS->>API: Update Stock
+    API->>INV: Validate Change
+    INV->>DB: Record Movement
+    INV->>DB: Update Stock
+    API-->>SF: Stock Update
+    SF->>API: Get Stock Level
+    API->>DB: Check Stock
+    API-->>SF: Stock Status
 ```
 
-## Core Components
-1. API Gateway
-- Handles authentication/authorization
-- Routes requests to appropriate services
-- Rate limiting and request validation
+## Data Flow Architecture
 
-2. Product Service
-- Product CRUD operations
-- Image handling
-- Product status management (draft/published)
-- Category management
+### Database Schema Relationships
+```mermaid
+erDiagram
+    PRODUCTS ||--o{ INVENTORY_MOVEMENTS : has
+    PRODUCTS ||--o{ ORDER_ITEMS : contains
+    CATEGORIES ||--o{ PRODUCTS : categorizes
+    ORDERS ||--|{ ORDER_ITEMS : includes
+    AUDIT_LOGS ||--o{ PRODUCTS : tracks
+    SETTINGS }|--|{ PRODUCTS : configures
+```
 
-3. Inventory Service
-- Stock management
-- Stock movement tracking
-- Low stock alerts
-- Inventory sync with storefront
+## State Transitions
 
-4. Database Layer
-- Products table
-- Categories table
-- Inventory table
-- Order management
+### Product Status Flow
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> Published
+    Published --> Archived
+    Archived --> Draft
+    Published --> Draft
+```
 
-## Security Implementation
-1. API Authentication
-- API key validation
-- Request origin validation
-- CORS configuration
+### Order Status Flow
+```mermaid
+stateDiagram-v2
+    [*] --> Pending
+    Pending --> Processing
+    Processing --> Completed
+    Processing --> Cancelled
+    Completed --> Refunded
+```
 
-2. Data Validation
-- Input sanitization
-- Schema validation
-- Image validation
+## Security Architecture
+```mermaid
+graph TB
+    subgraph "Security Layer"
+        API_KEY[API Key Auth]
+        CORS[CORS Policy]
+        RATE[Rate Limiting]
+        VAL[Input Validation]
+    end
 
-3. Error Handling
-- Standardized error responses
-- Error logging
-- Request tracking
+    subgraph "Monitoring"
+        LOG[Error Logging]
+        AUDIT[Audit Trail]
+        METRICS[Performance Metrics]
+    end
 
-## Deployment Considerations
-1. Backend (Render)
-   - Node.js runtime
-   - API gateway
-   - Service orchestration
+    API_KEY --> API
+    CORS --> API
+    RATE --> API
+    VAL --> API
+    API --> LOG
+    API --> AUDIT
+    API --> METRICS
+```
 
-2. Frontend (Vercel)
-   - PMS: Admin interface
-   - Storefront: Customer interface
-   - Static/serverless deployment
+This architecture ensures:
+1. Clear separation of concerns
+2. Scalable microservices
+3. Secure data flow
+4. Reliable state management
+5. Comprehensive monitoring
