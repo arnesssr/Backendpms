@@ -1,9 +1,9 @@
 {
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "NODE_ENV=production node dist/server.js",
     "dev": "ts-node src/server.ts",
-    "postinstall": "tsc"
+    "postinstall": "tsc && cp .env.production dist/.env"
   },
   "dependencies": {
     "@clerk/backend": "^0.38.3",

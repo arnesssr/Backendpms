@@ -28,27 +28,36 @@ const DEFAULT_CONFIG: DatabaseConfig = {
 }
 
 // Get appropriate connection URL based on environment
-const DATABASE_URL = process.env.NODE_ENV === 'test'
-  ? process.env.DATABASE_POOL_URL
-  : process.env.DATABASE_URL
+const isDevelopment = process.env.NODE_ENV === 'development';
+const isTest = process.env.NODE_ENV === 'test';
+
+// Prioritize different connection URLs based on environment
+const DATABASE_URL = 
+  isTest ? process.env.DATABASE_POOL_URL :
+  isDevelopment ? process.env.DATABASE_URL :
+  process.env.DATABASE_POOL_URL || process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
-  throw new Error('Database connection URL not configured')
+  console.error('Environment Variables:', {
+    NODE_ENV: process.env.NODE_ENV,
+    HAS_POOL_URL: !!process.env.DATABASE_POOL_URL,
+    HAS_DB_URL: !!process.env.DATABASE_URL
+  });
+  throw new Error('Database connection URL not configured');
 }
 
-// Create database instance with enhanced configuration
+// Create database instance with environment-specific configuration
 export const db = postgres(DATABASE_URL, {
   ssl: { rejectUnauthorized: false },
   idle_timeout: DEFAULT_CONFIG.idle_timeout,
-  max: DEFAULT_CONFIG.max_connections,
+  max: process.env.NODE_ENV === 'production' ? 20 : DEFAULT_CONFIG.max_connections,
   connect_timeout: DEFAULT_CONFIG.connect_timeout,
   max_lifetime: DEFAULT_CONFIG.max_lifetime,
   debug: process.env.NODE_ENV === 'development',
   onnotice: (notice) => {
-    console.log('Database Notice:', notice)
-  },
-  onparameter: (parameterStatus) => {
-    console.log('Parameter Status:', parameterStatus)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Database Notice:', notice);
+    }
   }
 })
 
