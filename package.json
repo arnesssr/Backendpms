@@ -1,16 +1,8 @@
 {
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "clean": "rm -rf dist",
     "start": "node dist/server.js",
-    "test": "jest --config jest.config.js --detectOpenHandles",
-    "test:watch": "jest --config jest.config.js --watch",
-    "test:coverage": "jest --config jest.config.js --coverage",
-    "test:db": "jest src/tests/db_tests/database.test.ts",
-    "test:api": "jest src/tests/integration/api --config=jest.config.ts --detectOpenHandles",
-    "test:products": "jest src/tests/integration/products/product-crud.test.ts",
-    "migrate": "ts-node src/db/migrate.ts",
+    "dev": "ts-node src/server.ts",
     "postinstall": "tsc"
   },
   "dependencies": {
