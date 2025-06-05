@@ -4,6 +4,7 @@ import { dbConnect } from './config/database';
 import { redis } from './config/redis';
 import dotenv from 'dotenv';
 import { Request, Response } from 'express';
+import { checkCloudinary } from './config/cloudinary';
 
 setDefaultResultOrder('ipv4first'); 
 dotenv.config();
@@ -64,6 +65,14 @@ async function startServer() {
     } else {
       console.log('✅ Redis connected successfully');
     }
+
+    // Check Cloudinary connection
+    const cloudinaryStatus = await checkCloudinary();
+    if (!cloudinaryStatus.healthy) {
+      console.warn('⚠️ Starting server with limited functionality - Cloudinary unavailable');
+    } else {
+      console.log('✅ Cloudinary connected successfully');
+    }
     
     // Use Render's assigned port directly without searching
     const port = parseInt(process.env.PORT || '10000', 10);
@@ -73,6 +82,7 @@ async function startServer() {
 - Port: ${port}
 - Database: ${dbConnected ? '✅ Connected' : '⚠️ Unavailable'}
 - Redis: ${redisConnected ? '✅ Connected' : '⚠️ Unavailable'}
+- Cloudinary: ${cloudinaryStatus.healthy ? '✅ Connected' : '⚠️ Unavailable'}
 - Mode: ${process.env.NODE_ENV === 'production' ? '🏭 Production' : '🛠️ Development'}
 `);
     });

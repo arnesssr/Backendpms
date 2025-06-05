@@ -218,3 +218,103 @@ This architecture ensures:
 3. Secure data flow
 4. Reliable state management
 5. Comprehensive monitoring
+
+# Project Architecture
+
+## Directory Structure
+```
+backendpms/
+├── scripts/              # Global build & deployment scripts
+│   ├── build.sh         # Production build script
+│   └── start.sh         # Production startup script
+│
+├── src/
+│   ├── scripts/         # Application-specific scripts
+│   │   ├── generateApiKey.ts
+│   │   └── seedDatabase.ts
+│   │
+│   ├── jobs/           # Scheduled jobs & background tasks
+│   │   ├── inventoryCleanupJob.ts
+│   │   └── metricCollectionJob.ts
+│   │
+│   └── services/       # Core business logic
+│
+├── tests/
+│   ├── integration/    # Integration tests
+│   ├── unit/          # Unit tests
+│   └── e2e/           # End-to-end tests
+│
+└── scripts.md          # Documentation for all scripts
+```
+
+## Script Organization
+
+### Global Scripts (./scripts/)
+Located at project root, handles:
+- Deployment procedures
+- Build processes
+- Environment setup
+- Container management
+
+Example:
+```bash
+./scripts/build.sh      # Production build
+./scripts/start.sh      # Production startup
+```
+
+### Application Scripts (./src/scripts/)
+Located in source code, handles:
+- Data management
+- Key generation
+- Database operations
+- Development utilities
+
+Example:
+```bash
+pnpm exec ts-node src/scripts/generateApiKey.ts
+pnpm exec ts-node src/scripts/seedDatabase.ts
+```
+
+### Test Scripts (./tests/)
+Located in tests directory, handles:
+- Test data setup
+- Mock data generation
+- Test environment configuration
+
+Example:
+```bash
+pnpm test:setup        # Setup test environment
+pnpm test:teardown     # Clean test environment
+```
+
+## Script Usage Guidelines
+
+1. **Global Scripts**
+   - Used by CI/CD pipelines
+   - Handle deployment tasks
+   - Manage production environment
+
+2. **Application Scripts**
+   - Used during development
+   - Handle data operations
+   - Generate development assets
+
+3. **Test Scripts**
+   - Used for testing
+   - Handle test data
+   - Manage test environment
+
+## Best Practices
+1. Global scripts should be in bash/shell
+2. Application scripts should be in TypeScript
+3. Test scripts should follow test framework conventions
+4. All scripts should have error handling
+5. Scripts should be documented in scripts.md
+
+## Script Documentation
+Each script should have:
+- Purpose description
+- Usage examples
+- Required permissions
+- Environment variables
+- Expected outputs

@@ -9,9 +9,16 @@ const config: Config.InitialOptions = {
     }]
   },
   setupFilesAfterEnv: ['./tests/setup.ts'],
+  testTimeout: 10000,
   detectOpenHandles: true,
   forceExit: true,
-  verbose: true
+  verbose: true,
+  clearMocks: true,
+  collectCoverageFrom: [
+    'src/**/*.{js,ts}',
+    '!src/types/**',
+    '!src/**/*.d.ts'
+  ]
 };
 
 export default config;

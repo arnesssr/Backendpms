@@ -1,32 +1,30 @@
 import IORedis, { RedisOptions } from 'ioredis';
 
-const isTest = process.env.NODE_ENV === 'test';
-
 const redisOptions: RedisOptions = {
-  maxRetriesPerRequest: isTest ? 1 : 5,
+  maxRetriesPerRequest: 3,
   enableReadyCheck: true,
-  retryStrategy(times: number) {
-    if (isTest) return null; // Return null instead of false for test env
-    return Math.min(times * 50, 2000);
-  },
-  reconnectOnError(err: Error) {
-    return err.message.includes('READONLY');
-  }
+  lazyConnect: true, // Don't connect immediately
+  autoResubscribe: false,
+  autoResendUnfulfilledCommands: false
 };
 
-const redis = new IORedis(process.env.REDIS_URL!, redisOptions);
+class RedisClient {
+  private static instance: IORedis;
 
-// Error handling
-redis.on('error', (error: Error) => {
-  if (!isTest) console.error('Redis connection error:', error.message);
-});
+  public static getInstance(): IORedis {
+    if (!RedisClient.instance) {
+      RedisClient.instance = new IORedis(process.env.REDIS_URL!, redisOptions);
+    }
+    return RedisClient.instance;
+  }
 
-redis.on('connect', () => {
-  console.log('✅ Redis connected');
-});
+  public static async closeConnection() {
+    if (RedisClient.instance) {
+      await RedisClient.instance.quit();
+      RedisClient.instance = null!;
+    }
+  }
+}
 
-redis.on('ready', () => {
-  console.log('✅ Redis ready to receive commands');
-});
-
-export { redis };
+export const redis = RedisClient.getInstance();
+export const closeRedis = RedisClient.closeConnection;

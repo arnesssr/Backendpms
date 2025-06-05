@@ -3,8 +3,12 @@ import { redis } from '../../../src/config/redis';
 
 describe('Redis Integration', () => {
   beforeAll(async () => {
-    // Ensure Redis is connected
-    await redis.ping();
+    // Only connect Redis for Redis tests
+    await redis.connect();
+  });
+
+  afterAll(async () => {
+    await redis.quit();
   });
 
   beforeEach(async () => {

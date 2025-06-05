@@ -63,3 +63,21 @@ pnpm test src/tests/database/database.test.ts
 1. Database Tests (MUST PASS FIRST)
 2. Integration Tests
 3. Product Tests
+
+# Source Tests Documentation
+
+## Directory Structure
+```
+src/tests/
+├── fixtures/        # Test fixtures
+├── helpers/        # Test helpers
+└── mocks/         # Test mocks
+```
+
+## Usage
+Test utilities and helpers used by main test suite.
+
+## Guidelines
+1. Keep fixtures up to date
+2. Document mock data
+3. Use typed helpers

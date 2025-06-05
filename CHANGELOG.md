@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.2] - 2024-03-14
+
+### Added
+- ✅ Audit System Implementation
+  - Event tracking
+  - Resource history
+  - Redis caching for audit logs
+- ✅ Audit API endpoints
+
 ## [2.0.1] - 2024-03-14
 
 ### Added

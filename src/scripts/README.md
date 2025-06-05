@@ -72,3 +72,32 @@ chmod +x src/scripts/generateApiKey.ts
 
 ## Security Note
 Keep your generated API key secure and never commit it to version control.
+
+# Application Scripts
+
+Development and utility scripts for Backend PMS.
+
+## Directory Structure
+```
+src/scripts/
+├── auth/              # Authentication scripts
+│   └── generateApiKey.ts
+├── db/               # Database scripts
+│   └── seedDatabase.ts
+├── test/             # Test utility scripts
+│   ├── setupTestDb.ts
+│   └── generateTestData.ts
+└── index.ts         # Script exports
+```
+
+## Usage
+```bash
+# Generate API Key
+pnpm exec ts-node src/scripts/auth/generateApiKey.ts
+
+# Seed Database
+pnpm exec ts-node src/scripts/db/seedDatabase.ts
+
+# Setup Test Database
+pnpm exec ts-node src/scripts/test/setupTestDb.ts
+```
