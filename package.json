@@ -9,11 +9,10 @@
   "author": "arnesssr",
   "license": "CC-BY-NC-4.0",
   "scripts": {
-    "clean": "rm -rf node_modules dist pnpm-lock.yaml",
     "dev": "ts-node src/server.ts",
-    "build": "chmod +x scripts/build.sh && ./scripts/build.sh",
-    "start": "chmod +x scripts/start.sh && ./scripts/start.sh",
-    "postinstall": "tsc"
+    "build": "./scripts/build.sh",
+    "start": "node dist/server.js",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
     "@clerk/backend": "^0.38.3",

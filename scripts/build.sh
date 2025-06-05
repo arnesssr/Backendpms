@@ -1,16 +1,21 @@
 #!/bin/bash
 
-# Clean old builds
+echo "🚀 Starting optimized build process..."
+
+# Clean previous builds
+echo "🧹 Cleaning previous builds..."
 rm -rf dist
 
-# Install dependencies
-pnpm install
+# Single installation step
+echo "📦 Installing dependencies..."
+pnpm install --frozen-lockfile
 
-# Build TypeScript
-pnpm run build
+# Single TypeScript compilation
+echo "🔨 Compiling TypeScript..."
+pnpm exec tsc
 
-# Copy environment template
+# Environment setup
+echo "⚙️ Setting up environment..."
 cp .env.example dist/.env
 
-# Make start script executable
-chmod +x scripts/start.sh
+echo "✅ Build completed!"

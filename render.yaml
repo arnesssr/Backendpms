@@ -2,11 +2,10 @@ services:
   - type: web
     name: backendpms
     env: node
-    buildCommand: pnpm install && pnpm build
+    buildCommand: chmod +x scripts/build.sh && ./scripts/build.sh
     startCommand: pnpm start
     nodeVersion: 18.x
     envVars:
       - key: NODE_ENV
         value: production
     healthCheckPath: /health
-    autoDeploy: true
