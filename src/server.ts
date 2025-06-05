@@ -52,43 +52,53 @@ async function startServer() {
       console.log('✅ Database connected successfully');
     }
     
-    // Try ports starting from env.PORT or 10000, with more attempts
-    const port = await findAvailablePort(parseInt(process.env.PORT || '10000'), 20);
-    console.log(`🔍 Found available port: ${port}`);
+    // Use Render's assigned port directly without searching
+    const port = parseInt(process.env.PORT || '10000', 10);
     
-    const server = app.listen(port, () => {
-      console.log(`\n🚀 Server is running:
-- Local API: http://localhost:${port}
-- Database Status: ${dbConnected ? '✅ Connected' : '⚠️ Limited'}
-- Health Check: http://localhost:${port}/health
-- Connection Tests:
-  • Basic API: http://localhost:${port}/api/test/test-product
-  • Database: http://localhost:${port}/api/test/connection
-  • PMS Auth: http://localhost:${port}/api/test/pms-connection (requires API key)
-`);
+    const server = app.listen(port, '0.0.0.0', () => {
+      console.log(`\n🚀 Server is running on port ${port}`);
     });
 
     // Initialize WebSocket
     io.attach(server);
 
-    // Handle server errors
+    // Improved error handling
     server.on('error', (error: NodeJS.ErrnoException) => {
-      if (error.code === 'EADDRINUSE') {
-        console.log(`⚠️ Port ${port} is already in use, trying next port...`);
-        // Port will be handled by findAvailablePort
-      } else {
-        console.error('Server error:', error);
-      }
+      console.error('Server error:', error);
+      process.exit(1);
     });
 
-    // Handle graceful shutdown
-    process.on('SIGTERM', () => {
-      console.log('SIGTERM received. Shutting down gracefully...');
-      server.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-      });
+    // Enhanced graceful shutdown
+    const shutdown = async () => {
+      console.log('\n🔄 Shutting down gracefully...');
+      
+      // Close server first
+      await new Promise(resolve => server.close(resolve));
+      console.log('✅ Server closed');
+      
+      // Close WebSocket connections
+      await new Promise(resolve => io.close(resolve));
+      console.log('✅ WebSocket closed');
+      
+      // Exit process
+      process.exit(0);
+    };
+
+    // Handle termination signals
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
+    
+    // Handle uncaught errors
+    process.on('uncaughtException', (error) => {
+      console.error('Uncaught Exception:', error);
+      shutdown();
     });
+
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      shutdown();
+    });
+
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);
