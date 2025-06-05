@@ -111,6 +111,16 @@ pnpm migrate
 3. Configure connection string
 4. Run migrations
 
+## Redis Configuration
+1. Create Upstash account
+2. Create new database
+3. Copy Redis URL and token
+4. Add to Render environment variables:
+   ```
+   REDIS_URL=redis://your-url
+   REDIS_TOKEN=your-token
+   ```
+
 ## Post-Deployment Checklist
 
 1. Verify Environment

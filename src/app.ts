@@ -18,6 +18,7 @@ import auditRoutes from './routes/auditRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
 import { socketConfig } from './config/socketConfig';
+import { HealthcheckService } from './services/healthcheckService';
 
 export const app = express();
 const httpServer = createServer(app);
@@ -86,8 +87,13 @@ app.use('/api/audit', apiKeyAuth, auditRoutes);
 app.use('/api/notifications', apiKeyAuth, notificationRoutes);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+  const healthcheck = await HealthcheckService.getInstance().checkSystem();
+  res.json({
+    status: healthcheck.database.healthy ? 'ok' : 'degraded',
+    timestamp: new Date().toISOString(),
+    checks: healthcheck
+  });
 });
 
 // Error handler should be last

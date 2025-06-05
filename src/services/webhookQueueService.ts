@@ -1,4 +1,5 @@
-import Bull = require('bull');
+import Bull from 'bull';
+import { redis } from '../config/redis';
 
 interface WebhookPayload {
   event: string;
@@ -12,7 +13,10 @@ export class WebhookQueue {
 
   private constructor() {
     this.queue = new Bull('webhooks', {
-      redis: process.env.REDIS_URL
+      redis: process.env.REDIS_URL,
+      defaultJobOptions: {
+        removeOnComplete: true
+      }
     });
   }
 
@@ -36,5 +40,18 @@ export class WebhookQueue {
         throw error;
       }
     });
+  }
+
+  // Add cleanup method
+  public async close(): Promise<void> {
+    await this.queue.close();
+  }
+
+  // Handle test environment
+  public static async cleanup(): Promise<void> {
+    if (WebhookQueue.instance) {
+      await WebhookQueue.instance.close();
+      WebhookQueue.instance = null!;
+    }
   }
 }

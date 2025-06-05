@@ -1,11 +1,15 @@
 import { setDefaultResultOrder } from 'dns';
-import { app, io } from './app';  // Import io from app.ts
+import { app, io } from './app';
 import { dbConnect } from './config/database';
+import { redis } from './config/redis';
 import dotenv from 'dotenv';
 import { Request, Response } from 'express';
 
 setDefaultResultOrder('ipv4first'); 
 dotenv.config();
+
+// Set default NODE_ENV if not set
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
 const PORT = process.env.PORT || 10000; // Explicitly use port 10000 as fallback
 
@@ -45,18 +49,32 @@ const findAvailablePort = async (startPort: number, maxAttempts: number = 10): P
 // Attach Socket.IO to existing server
 async function startServer() {
   try {
+    // Check DB connection
     const dbConnected = await dbConnect();
     if (!dbConnected) {
       console.warn('⚠️ Starting server with limited functionality - database unavailable');
     } else {
       console.log('✅ Database connected successfully');
     }
+
+    // Check Redis connection
+    const redisConnected = await redis.ping().then(() => true).catch(() => false);
+    if (!redisConnected) {
+      console.warn('⚠️ Starting server with limited functionality - Redis unavailable');
+    } else {
+      console.log('✅ Redis connected successfully');
+    }
     
     // Use Render's assigned port directly without searching
     const port = parseInt(process.env.PORT || '10000', 10);
     
     const server = app.listen(port, '0.0.0.0', () => {
-      console.log(`\n🚀 Server is running on port ${port}`);
+      console.log(`\n🚀 Server is running:
+- Port: ${port}
+- Database: ${dbConnected ? '✅ Connected' : '⚠️ Unavailable'}
+- Redis: ${redisConnected ? '✅ Connected' : '⚠️ Unavailable'}
+- Mode: ${process.env.NODE_ENV === 'production' ? '🏭 Production' : '🛠️ Development'}
+`);
     });
 
     // Initialize WebSocket
