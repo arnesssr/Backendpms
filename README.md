@@ -97,7 +97,7 @@ Production deployment instructions available in [Deployment Guide](./docs/DEPLOY
 ## Integration
 
 ### PMS Frontend
-- Repository: [Inventra Frontend](https://github.com/arnesssr/inventra-frontend)
+- Repository: [Inventra Frontend]([https://github.com/arnesssr/inventra-frontend](https://github.com/arnesssr/Inventra---frontend))
 - Documentation: [Integration Guide](./docs/INTEGRATION.md)
 
 ### Storefront
