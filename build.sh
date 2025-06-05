@@ -1,9 +1,8 @@
 #!/bin/bash
-# Remove old lockfile and node_modules
-rm -rf pnpm-lock.yaml node_modules
 
-# Fresh install without frozen lockfile
+# Clean install
+pnpm run clean
 pnpm install
 
-# Build the project
+# Build
 pnpm run build

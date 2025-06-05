@@ -1,7 +1,7 @@
 import express from 'express';
 import { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import { Server as SocketIOServer } from 'socket.io';
+import { Server } from 'socket.io';
 import { createServer } from 'http';
 import { db, dbConnect } from './config/database';
 import productRoutes from './routes/productRoutes';
@@ -22,7 +22,7 @@ export const app = express();
 const httpServer = createServer(app);
 
 // Initialize Socket.IO with type-safe configuration
-export const io = new SocketIOServer(httpServer, socketConfig);
+export const io = new Server(httpServer, socketConfig);
 
 // Socket.IO connection handler with type safety
 io.on('connection', (socket) => {

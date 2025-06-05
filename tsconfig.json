@@ -43,7 +43,8 @@
     ],
     "types": [
       "node",
-      "socket.io"
+      "express",
+      "jest"
     ],
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
     // "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
@@ -125,7 +126,8 @@
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "src/types/*.d.ts"
   ],
   "exclude": [
     "node_modules",
