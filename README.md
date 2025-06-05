@@ -1,160 +1,132 @@
-# PMS Backend Service
+# Backend PMS (Product Management System)
 
-Backend service for Product Management System (PMS) and Storefront integration.
+Backend service for Inventra PMS, handling product management, inventory, and storefront integration.
 
-## 📋 Project Status
+## Quick Links
+- [API Documentation](./docs/API.md)
+- [Architecture Overview](./docs/ARCHITECTURE.md)
+- [Security Implementation](./docs/SECURITY.md)
+- [Deployment Guide](./docs/DEPLOYMENT.md)
+- [Development TODO](./docs/TODO.md)
 
-View detailed implementation status and roadmap in [TODO.md](docs/TODO.md)
+## Features
+- ✅ Real-time inventory tracking
+- ✅ Product management
+- ✅ WebSocket integration
+- ✅ Audit logging
+- ✅ Automated notifications
+- ✅ API key authentication
 
-- Overall Progress: 75% Complete
-- Current Phase: Integration & Event System Implementation
-- Next Milestone: Webhook System & Real-time Updates
+## Tech Stack
+- Node.js & Express
+- TypeScript
+- Socket.IO
+- PostgreSQL (Supabase)
+- Clerk Authentication
 
-## 🏗 Architecture
-
-![Architecture Overview](docs/images/architecture.png)
-
-```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        PMS["PMS (Vercel)"]
-        SF["Storefront (Vercel)"]
-    end
-    subgraph "Backend Layer"
-        API["API (Render)"]
-        QUEUE["Event Queue"]
-    end
-    subgraph "Database"
-        DB["Supabase"]
-    end
-    PMS --> API
-    SF --> API
-    API --> DB
-    API --> QUEUE
-    QUEUE --> SF
-```
-
-## 🚀 Quick Start
-
-```bash
-# Install dependencies
-pnpm install
-
-# Set up environment
-cp .env.example .env
-
-# Run development server
-pnpm dev
-
-# Run tests
-pnpm test
-```
-
-## 🔑 API Authentication
-
-- Required: API Key in `X-API-Key` header
-- Generate key: `pnpm generate-key`
-
-## 📦 Core Features
-
-1. Product Management
-   - CRUD operations
-   - Status transitions
-   - Image handling
-
-2. Inventory Control
-   - Stock tracking
-   - Movement history
-   - Alerts system
-
-3. Order Processing
-   - Creation/updates
-   - Status management
-   - Refund handling
-
-## 🔄 Integration Points
-
-### PMS Integration
-- Product publishing workflow
-- Inventory management
-- Order processing
-
-### Storefront Integration
-- Product availability
-- Stock synchronization
-- Order creation
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-pnpm test
-
-# Run specific test suite
-pnpm test:unit
-pnpm test:integration
-pnpm test:e2e
-```
-
-## 📚 Documentation
-
-- [Architecture Overview](docs/ARCHITECTURE.md)
-- [API Documentation](docs/API.md)
-- [Database Schema](docs/SCHEMA.md)
-- [Implementation Status](docs/TODO.md)
-
-## 🛠 Development
+## Getting Started
 
 ### Prerequisites
-- Node.js v18+
-- pnpm
-- PostgreSQL (Supabase)
+```bash
+node >= 18
+pnpm >= 8
+```
 
 ### Environment Setup
-Required environment variables:
+1. Clone repository
+2. Copy environment variables:
 ```bash
-DATABASE_URL=          # Supabase connection string
-API_KEY=              # Generated API key
-PMS_URL=              # PMS frontend URL
-STOREFRONT_URL=       # Storefront URL
+cp .env.example .env
 ```
 
-### Database Migrations
+3. Install dependencies:
 ```bash
-pnpm migrate:latest   # Run migrations
-pnpm migrate:rollback # Rollback last migration
+pnpm install
 ```
 
-## 🚀 Deployment
+4. Start development server:
+```bash
+pnpm dev
+```
 
-Current deployment on Render:
-- URL: {your backend url}
-- Auto-deploys from `main` branch
+### Environment Variables
+See [Environment Configuration](./docs/DEPLOYMENT.md#environment-variables) for details.
 
-## 📈 Monitoring
+## API Routes
 
-- Health Check: `/health`
-- Metrics: `/metrics`
-- Status: `/status`
+### PMS Integration
+```typescript
+POST /api/pms/products/create       // Create product
+PUT /api/pms/products/:id/publish   // Publish product
+GET /api/pms/inventory/alerts       // Stock alerts
+```
 
-## 🔜 Next Steps
+### WebSocket Events
+```typescript
+socket.on('subscribe_inventory', (productId: string))
+socket.on('inventory_update', (data: InventoryUpdate))
+```
 
-See [TODO.md](docs/TODO.md) for detailed implementation roadmap.
+Full API documentation available in [API.md](./docs/API.md)
 
-1. Event Queue System
-2. Webhook Implementation
-3. Real-time Updates
-4. Caching Layer
-5. Rate Limiting
+## Development
 
-## 🤝 Contributing
+### Available Scripts
+```bash
+pnpm dev          # Start development server
+pnpm build        # Build for production
+pnpm start        # Start production server
+pnpm test         # Run tests
+```
 
-1. Fork the repository
+### Testing
+See [Testing Documentation](./docs/TESTING.md) for details on:
+- Unit tests
+- Integration tests
+- WebSocket testing
+
+## Deployment
+Production deployment instructions available in [Deployment Guide](./docs/DEPLOYMENT.md)
+
+### Supported Platforms
+- ✅ Render
+- ✅ Railway
+- ✅ DigitalOcean
+- ✅ Custom VPS
+
+## Integration
+
+### PMS Frontend
+- Repository: [Inventra Frontend](https://github.com/arnesssr/inventra-frontend)
+- Documentation: [Integration Guide](./docs/INTEGRATION.md)
+
+### Storefront
+- Repository: [Storefront](https://github.com/arnesssr/storefront)
+- Documentation: [Storefront Integration](./docs/STOREFRONT.md)
+
+## Project Structure
+```
+src/
+├── config/         # Configuration files
+├── controllers/    # Route controllers
+├── middleware/     # Express middleware
+├── routes/         # API routes
+├── services/       # Business logic
+├── types/         # TypeScript types
+└── utils/         # Utility functions
+```
+
+## Contributing
+1. Fork repository
 2. Create feature branch
 3. Commit changes
 4. Push to branch
-5. Create Pull Request
+5. Open pull request
 
-## 📄 License
+## License
+MIT License - see [LICENSE](./LICENSE) for details
 
-MIT License - see [LICENSE](LICENSE)
+## Support
+- Documentation: [/docs](./docs)
+- Issues: [GitHub Issues](https://github.com/arnesssr/backendpms/issues)
+- Security: [SECURITY.md](./docs/SECURITY.md)
