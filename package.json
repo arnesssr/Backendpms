@@ -1,6 +1,13 @@
 {
   "name": "backendpms",
   "version": "1.0.0",
+  "description": "Backend PMS: Product Management System with Real-time Integration",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arnesssr/backendpms.git"
+  },
+  "author": "arnesssr",
+  "license": "CC-BY-NC-4.0",
   "scripts": {
     "clean": "rm -rf node_modules dist pnpm-lock.yaml",
     "dev": "ts-node src/server.ts",
