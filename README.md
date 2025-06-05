@@ -128,7 +128,7 @@ pnpm migrate:rollback # Rollback last migration
 ## 🚀 Deployment
 
 Current deployment on Render:
-- URL: https://backendpms-wvoo.onrender.com
+- URL: {your backend url}
 - Auto-deploys from `main` branch
 
 ## 📈 Monitoring
