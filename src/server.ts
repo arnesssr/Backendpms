@@ -45,8 +45,12 @@ const findAvailablePort = async (startPort: number, maxAttempts: number = 10): P
 // Attach Socket.IO to existing server
 async function startServer() {
   try {
-    await dbConnect();
-    console.log('✅ Database connected successfully');
+    const dbConnected = await dbConnect();
+    if (!dbConnected) {
+      console.warn('⚠️ Starting server with limited functionality - database unavailable');
+    } else {
+      console.log('✅ Database connected successfully');
+    }
     
     // Try ports starting from env.PORT or 10000, with more attempts
     const port = await findAvailablePort(parseInt(process.env.PORT || '10000'), 20);
@@ -55,6 +59,7 @@ async function startServer() {
     const server = app.listen(port, () => {
       console.log(`\n🚀 Server is running:
 - Local API: http://localhost:${port}
+- Database Status: ${dbConnected ? '✅ Connected' : '⚠️ Limited'}
 - Health Check: http://localhost:${port}/health
 - Connection Tests:
   • Basic API: http://localhost:${port}/api/test/test-product

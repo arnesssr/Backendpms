@@ -78,11 +78,23 @@ export const supabase = createClient(
 
 // Connection health check
 export const dbConnect = async () => {
-  // Verify database connection
-  const { data, error } = await supabase.from('health_check').select('*');
-  if (error) throw error;
-  return true;
-}
+  try {
+    // Simple query to verify connection
+    const { data, error } = await supabase
+      .from('products')
+      .select('count')
+      .limit(1);
+
+    if (error) throw error;
+
+    console.log('Database connected: PostgreSQL', data ? 'tables accessible' : 'empty schema');
+    return true;
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    // Don't throw on startup - allow app to start with degraded functionality
+    return false;
+  }
+};
 
 // Get connection metrics
 export const getConnectionMetrics = () => {
