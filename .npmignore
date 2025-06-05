@@ -1,0 +1,13 @@
+src/
+tests/
+docs/
+.github/
+.git/
+.env*
+*.log
+coverage/
+.vscode/
+node_modules/
+pnpm-lock.yaml
+tsconfig.json
+.gitignore

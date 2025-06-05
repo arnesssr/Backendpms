@@ -1,5 +1,5 @@
 {
-  "name": "backendpms",
+  "name": "@arnesssr/backendpms",
   "version": "1.0.0",
   "description": "Backend PMS: Product Management System with Real-time Integration",
   "repository": {
@@ -61,5 +61,23 @@
     "tsc-alias": "^1.8.8",
     "vitest": "^1.2.0",
     "@types/bull": "^4.10.0"
-  }
+  },
+  "main": "dist/server.js",
+  "types": "dist/server.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "pms",
+    "inventory",
+    "websocket",
+    "real-time",
+    "webhook",
+    "typescript"
+  ]
 }
