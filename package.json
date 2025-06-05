@@ -1,9 +1,9 @@
 {
   "scripts": {
-    "build": "tsc",
-    "start": "NODE_ENV=production node dist/server.js",
-    "dev": "ts-node src/server.ts",
-    "postinstall": "tsc && cp .env.production dist/.env"
+    "build": "tsc && cp .env.example dist/.env",
+    "postinstall": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts"
   },
   "dependencies": {
     "@clerk/backend": "^0.38.3",
@@ -21,7 +21,8 @@
     "pino": "^8.17.2",
     "pino-pretty": "^10.3.1",
     "postgres": "^3.4.7",
-    "socket.io": "^4.8.1",
+    "socket.io": "^4.7.2",
+    "@types/socket.io": "^3.0.2",
     "typescript": "^5.3.3",
     "zod": "^3.22.4"
   },

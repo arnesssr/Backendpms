@@ -2,8 +2,9 @@ services:
   - type: web
     name: backendpms
     env: node
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm start
+    nodeVersion: 18.x
     envVars:
       - key: NODE_ENV
         value: production
