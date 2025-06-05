@@ -41,7 +41,10 @@
       "./node_modules/@types",
       "./src/types"
     ],
-    "types": ["node", "jest"],
+    "types": [
+      "node",
+      "socket.io"
+    ],
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
     // "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
     // "allowImportingTsExtensions": true,               /* Allow imports to include TypeScript file extensions. Requires '--moduleResolution bundler' and either '--noEmit' or '--emitDeclarationOnly' to be set. */

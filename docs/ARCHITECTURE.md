@@ -1,5 +1,41 @@
 # Backend Architecture Documentation
 
+# System Architecture
+
+## Current Implementation
+```mermaid
+graph TB
+    Client[Client Applications] --> Auth[Authentication Layer]
+    Auth --> API[API Layer]
+    API --> Services[Service Layer]
+    Services --> DB[(Database)]
+    
+    WebSocket[WebSocket Server] --> EventHandler[Event Handler]
+    EventHandler --> Services
+```
+
+## Required Components
+
+### 1. Event System
+- Event Bus
+- Message Queue
+- Real-time Updates
+
+### 2. Data Flow
+- Validation Layer
+- Transaction Management
+- Cache Layer
+
+### 3. Integration Points
+- Webhook System
+- External Services
+- Monitoring System
+
+## Security Architecture
+- Authentication Flow
+- Authorization Rules
+- Data Protection
+
 ## Complete System Architecture
 ```mermaid
 graph TB

@@ -2,6 +2,7 @@ import { db } from '../config/database';
 import { Product, ProductStatus, type ProductStatus as ProductStatusType } from '../models/Product';
 import { ValidationError, NotFoundError } from '../utils/errors';
 import postgres from 'postgres';
+import { WebhookService } from './webhookService';
 
 // Update ProductRow interface to exactly match database schema
 interface ProductRow {
@@ -33,6 +34,12 @@ function mapRowToProduct(row: ProductRow): Product {
 }
 
 export class ProductService {
+  private webhookService: WebhookService;
+
+  constructor() {
+    this.webhookService = new WebhookService();
+  }
+
   async validateProduct(data: Partial<Product>): Promise<void> {
     // Price validation
     if (data.price && data.price <= 0) {
@@ -124,6 +131,13 @@ export class ProductService {
 
       return mapRowToProduct(row);
     });
+
+    // Notify webhook endpoints
+    await this.webhookService.notify(
+      process.env.STOREFRONT_WEBHOOK_URL || '',
+      'product.updated',
+      result
+    );
 
     return result;
   }

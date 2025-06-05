@@ -1,18 +1,42 @@
 import express from 'express';
 import { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import { Server as SocketIOServer } from 'socket.io';
+import { createServer } from 'http';
 import { db, dbConnect } from './config/database';
 import productRoutes from './routes/productRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import inventoryRoutes from './routes/inventoryRoutes';
 import orderRoutes from './routes/orderRoutes';
 import pmsRoutes from './routes/pmsRoutes';
+import webhookRoutes from './routes/webhookRoutes';
 import { apiKeyAuth } from './middleware/apiKeyAuth';
 import { requestLogger } from './middleware/requestLogger';
 import { errorHandler } from './middleware/errorHandler';
 import testRoutes from './routes/testRoutes';
+import auditRoutes from './routes/auditRoutes';
+import notificationRoutes from './routes/notificationRoutes';
+import { socketConfig } from './config/socketConfig';
 
 export const app = express();
+const httpServer = createServer(app);
+
+// Initialize Socket.IO with type-safe configuration
+export const io = new SocketIOServer(httpServer, socketConfig);
+
+// Socket.IO connection handler with type safety
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
+  
+  socket.on('subscribe_inventory', (productId: string) => {
+    socket.join(`inventory:${productId}`);
+    console.log(`Client ${socket.id} subscribed to inventory:${productId}`);
+  });
+  
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
 
 // Add request logging middleware before other middleware
 app.use((req, res, next) => {
@@ -28,18 +52,10 @@ app.use((req, res, next) => {
 
 // Middleware
 app.use(cors({
-  origin: (origin, callback) => {
-    const allowedOrigins = [
-      process.env.PMS_URL,
-      process.env.STOREFRONT_URL
-    ].filter(Boolean) as string[];
-
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: [
+    process.env.PMS_URL || 'http://localhost:5173',
+    process.env.STOREFRONT_URL || 'http://localhost:3000'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 }));
@@ -58,16 +74,14 @@ app.get('/', (req, res) => {
   });
 });
 
-// Test routes should be before protected routes
+// Test routes should be first and properly mounted
 app.use('/api/test', testRoutes);
 
 // Protected routes
-app.use('/api/products', apiKeyAuth, productRoutes);
-app.use('/api/categories', apiKeyAuth, categoryRoutes);
-app.use('/api/inventory', apiKeyAuth, inventoryRoutes);
-app.use('/api/orders', apiKeyAuth, orderRoutes);
-app.use('/api/pms', apiKeyAuth, pmsRoutes); // Add PMS routes
-app.use('/api/pms/products', apiKeyAuth, productRoutes); // Add product routes
+app.use('/api/pms', apiKeyAuth, pmsRoutes);
+app.use('/api/inventory/alerts', apiKeyAuth, inventoryRoutes);
+app.use('/api/audit', apiKeyAuth, auditRoutes);
+app.use('/api/notifications', apiKeyAuth, notificationRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
