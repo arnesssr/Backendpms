@@ -16,6 +16,7 @@ import { errorHandler } from './middleware/errorHandler';
 import testRoutes from './routes/testRoutes';
 import auditRoutes from './routes/auditRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
 import { socketConfig } from './config/socketConfig';
 
 export const app = express();
@@ -79,6 +80,7 @@ app.use('/api/test', testRoutes);
 
 // Protected routes
 app.use('/api/pms', apiKeyAuth, pmsRoutes);
+app.use('/api/analytics', apiKeyAuth, analyticsRoutes);
 app.use('/api/inventory/alerts', apiKeyAuth, inventoryRoutes);
 app.use('/api/audit', apiKeyAuth, auditRoutes);
 app.use('/api/notifications', apiKeyAuth, notificationRoutes);

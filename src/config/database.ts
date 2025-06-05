@@ -1,3 +1,4 @@
+import { createClient } from '@supabase/supabase-js';
 import postgres from 'postgres';
 import dotenv from 'dotenv';
 
@@ -69,21 +70,18 @@ let metrics: ConnectionMetrics = {
   wait_time: 0
 }
 
+// Supabase client
+export const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_KEY!
+);
+
 // Connection health check
 export const dbConnect = async () => {
-  try {
-    console.log('Verifying database connection...')
-    const startTime = Date.now()
-    const result = await db`SELECT version()`
-    const endTime = Date.now()
-
-    metrics.wait_time = endTime - startTime
-    console.log('Database connected:', result[0].version)
-    return true
-  } catch (error) {
-    console.error('Database connection failed:', error)
-    throw error
-  }
+  // Verify database connection
+  const { data, error } = await supabase.from('health_check').select('*');
+  if (error) throw error;
+  return true;
 }
 
 // Get connection metrics
