@@ -2,7 +2,7 @@ services:
   - type: web
     name: backendpms
     env: node
-    buildCommand: chmod +x scripts/build.sh && ./scripts/build.sh
+    buildCommand: pnpm install --no-frozen-lockfile && pnpm run build
     startCommand: pnpm start
     nodeVersion: 18.x
     envVars:

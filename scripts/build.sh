@@ -6,15 +6,19 @@ echo "🚀 Starting optimized build process..."
 echo "🧹 Cleaning previous builds..."
 rm -rf dist
 
-# Single installation step
+# Install dependencies without frozen lockfile
 echo "📦 Installing dependencies..."
-pnpm install --frozen-lockfile
+pnpm install --no-frozen-lockfile
 
-# Single TypeScript compilation
+# Ensure Redis dependencies
+echo "📦 Installing Redis dependencies..."
+pnpm add ioredis@5.6.1
+
+# Build TypeScript
 echo "🔨 Compiling TypeScript..."
 pnpm exec tsc
 
-# Environment setup
+# Copy environment template
 echo "⚙️ Setting up environment..."
 cp .env.example dist/.env
 
