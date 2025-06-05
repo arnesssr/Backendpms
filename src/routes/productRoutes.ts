@@ -2,8 +2,10 @@ import { Router, Request, Response } from 'express';
 import { db } from '../config/database';
 import { handleImageUpload, validateImages } from '../middleware/imageUploadMiddleware';
 import { productController } from '../controllers/productController';
+import { ProductPublishService } from '../services/productPublishService';
 
 const router = Router();
+const publishService = ProductPublishService.getInstance();
 
 // Get all published products
 router.get('/', async (req: Request, res: Response) => {
@@ -61,9 +63,21 @@ router.put('/:id',
 );
 
 // Publish product
-router.post('/:id/publish',
-  productController.publishProduct
-);
+router.post('/:id/publish', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const publishedProduct = await publishService.publishProduct(id);
+    res.json({
+      success: true,
+      data: publishedProduct
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to publish product'
+    });
+  }
+});
 
 // Handle image uploads separately
 router.post('/images',

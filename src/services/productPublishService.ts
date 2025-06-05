@@ -1,47 +1,57 @@
-import { supabase } from './supabaseService';
-import type { Product } from '../types/models/product.types';
-import { db } from '../config/database'
+import { supabase } from '../config/database';
+import { WebhookQueue } from './webhookQueueService';
+import { io } from '../app';
 
-export const productPublishService = {
-  async publishProduct(productId: string) {
-    // 1. Get product from PMS database
-    const [product] = await db`
-      SELECT * FROM products WHERE id = ${productId}
-    `;
+export interface PublishableProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  images: string[];
+  status: 'draft' | 'published' | 'archived';
+  inventory: number;
+  categoryId: string;
+}
 
-    if (!product) {
-      throw new Error('Product not found');
+export class ProductPublishService {
+  private static instance: ProductPublishService;
+  webhookQueue: any;
+  
+  private constructor() {}
+  
+  public static getInstance(): ProductPublishService {
+    if (!ProductPublishService.instance) {
+      ProductPublishService.instance = new ProductPublishService();
     }
-
-    // 2. Transform for public storefront
-    const publicProduct = {
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      images: product.imageUrls,
-      category: product.category,
-      status: 'published',
-      publishedAt: new Date().toISOString()
-    };
-
-    // 3. Insert/Update in Supabase public table
-    const { data, error } = await supabase
-      .from('products_public')
-      .upsert(publicProduct);
-
-    if (error) {
-      throw new Error(`Failed to publish to storefront: ${error.message}`);
-    }
-
-    // 4. Update status in PMS database
-    await db`
-      UPDATE products 
-      SET status = 'published', 
-          published_at = ${new Date()} 
-      WHERE id = ${productId}
-    `;
-
-    return data;
+    return ProductPublishService.instance;
   }
-};
+
+  async publishProduct(productId: string): Promise<PublishableProduct> {
+    const { data: product, error } = await supabase
+      .from('products')
+      .update({ 
+        status: 'published',
+        publishedAt: new Date().toISOString(),
+        lastPublishedAt: new Date().toISOString() 
+      })
+      .eq('id', productId)
+      .select('*')
+      .single();
+
+    if (error) throw new Error(`Failed to publish product: ${error.message}`);
+
+    // Notify storefront via webhook
+    await this.webhookQueue.add('product.published', {
+      event: 'product.published',
+      data: product,
+      timestamp: new Date().toISOString()
+    });
+
+    // Notify connected clients via WebSocket
+    io.emit('product_published', { productId, status: 'published' });
+
+    return product;
+  }
+}
+
+export const productPublishService = ProductPublishService.getInstance();

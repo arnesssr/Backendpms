@@ -10,7 +10,5 @@ export const socketConfig: Partial<ServerOptions> = {
     methods: ["GET", "POST"],
     credentials: true
   },
-  pingTimeout: parseInt(process.env.SOCKET_PING_TIMEOUT || '5000'),
-  pingInterval: parseInt(process.env.SOCKET_PING_INTERVAL || '10000'),
   transports: ['websocket', 'polling']
 };

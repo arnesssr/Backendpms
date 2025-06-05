@@ -1,33 +1,32 @@
-export type OrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled';
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export type OrderStatus = 
+  | 'pending'
+  | 'confirmed'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'refunded';
 
 export interface OrderItem {
-  id?: string;
-  orderId: string;
   productId: string;
   quantity: number;
   price: number;
-  createdAt?: Date;
 }
 
 export interface Order {
-  id?: string;
-  customerName: string;
-  customerEmail: string;
-  total: number;
-  status: 'pending' | 'processing' | 'completed' | 'cancelled';
+  id: string;
   items: OrderItem[];
-  createdAt?: Date;
-  updatedAt?: Date;
+  status: OrderStatus;
+  total: number;
+  customerId: string;
+  shippingAddress: string;
+  createdAt: string;
+  updatedAt: string;
+  notes?: string;
 }
 
-export interface CreateOrderDTO {
-  customerName: string;
-  customerEmail: string;
-  total: number;
-  items: Array<{
-    productId: string;
-    quantity: number;
-    price: number;
-  }>;
-}
+export type OrderTransition = {
+  from: OrderStatus;
+  to: OrderStatus;
+  action: string;
+};
