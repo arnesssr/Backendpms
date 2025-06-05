@@ -1,13 +1,46 @@
 # Backend PMS (Product Management System)
 
-Backend service for Inventra PMS, handling product management, inventory, and storefront integration.
+A robust, real-time enabled backend service for product management and inventory control.
 
-## Quick Links
+## Documentation Quick Links
 - [API Documentation](./docs/API.md)
 - [Architecture Overview](./docs/ARCHITECTURE.md)
 - [Security Implementation](./docs/SECURITY.md)
 - [Deployment Guide](./docs/DEPLOYMENT.md)
-- [Development TODO](./docs/TODO.md)
+- [Testing Guide](./docs/TESTING.md)
+- [Development Progress](./docs/TODO.md)
+- [Change History](./CHANGELOG.md)
+
+## System Overview
+Backend PMS provides:
+- Real-time inventory management with WebSocket integration
+- Distributed caching with Redis
+- Event-driven architecture for scalability
+- Comprehensive health monitoring
+- Automated background jobs
+- Type-safe API endpoints
+
+### Core Systems
+1. **Product Management**
+   - Publishing workflow
+   - Version control
+   - Asset management
+
+2. **Inventory Control**
+   - Real-time stock updates
+   - Reservation system
+   - Low stock alerts
+
+3. **Order Processing**
+   - State machine workflow
+   - Inventory validation
+   - Webhook notifications
+
+4. **Integration Points**
+   - WebSocket events
+   - REST APIs
+   - Webhook system
+   - Background jobs
 
 ## Features
 - ✅ Real-time inventory tracking

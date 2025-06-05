@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.1] - 2024-03-14
+
+### Added
+- ✅ Redis Integration & Health Checks
+- ✅ Comprehensive Testing Documentation
+- ✅ Improved Server Startup Checks
+
+### Enhanced
+- 🔍 Better Health Monitoring
+- 🚦 Service Status Indicators
+- 📝 Documentation Links
+
 ## [2.0.0] - 2024-03-14
 
 ### Added
