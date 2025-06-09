@@ -56,6 +56,25 @@ Remaining Work: 5%
    - [ ] Add OpenAPI/Swagger docs
    - [ ] Complete API documentation
 
+4. Security & Integration Requirements
+   - [x] Implement required security headers:
+     - X-Request-Signature
+     - X-Request-Timestamp
+     - X-Request-Nonce
+   - [x] Update CORS configuration:
+     - Verify frontend origin acceptance
+     - Handle preflight requests properly
+     - Configure allowed headers list
+   - [x] Document security key generation
+   - [x] Implement key rotation strategy
+   - [ ] Setup automated key rotation alerts
+   - [ ] Implement key usage monitoring
+
+5. Integration Monitoring
+   - [ ] API response format validation
+   - [ ] WebSocket connection stability monitoring
+   - [ ] Rate limiting impact analysis
+
 ### Next Release (v2.1.0)
 1. Performance optimizations
 2. Monitoring system

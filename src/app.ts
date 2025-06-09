@@ -59,7 +59,16 @@ app.use(cors({
     process.env.STOREFRONT_URL || 'http://localhost:3000'
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-API-Key',
+    'X-Request-Signature',
+    'X-Request-Timestamp',
+    'X-Request-Nonce'
+  ],
+  maxAge: 600 // Cache preflight requests for 10 minutes
 }));
 
 app.use(express.json());
