@@ -9,9 +9,17 @@ export interface ValidationResponse {
   error?: string;
 }
 
+// Custom error for security-related issues
 export class SecurityError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'SecurityError';
   }
+}
+
+// Types for signature verification
+export interface SignaturePayload {
+  body: any;
+  timestamp: string;
+  nonce: string;
 }

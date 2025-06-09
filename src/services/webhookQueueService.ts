@@ -5,6 +5,8 @@ interface WebhookPayload {
   event: string;
   data: any;
   timestamp: string;
+  endpoint?: string;
+  attempts?: number;
 }
 
 export class WebhookQueue {

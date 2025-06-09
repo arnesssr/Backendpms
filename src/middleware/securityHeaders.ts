@@ -22,7 +22,7 @@ export const validateSecurityHeaders = (
     'X-Request-Signature': signature,
     'X-Request-Timestamp': timestamp,
     'X-Request-Nonce': nonce
-  });
+  }, req.body);
 
   if (!validationResult.isValid) {
     return res.status(401).json({ error: validationResult.error });
@@ -31,7 +31,7 @@ export const validateSecurityHeaders = (
   next();
 };
 
-function validateHeaders(headers: SecurityHeaders): ValidationResponse {
+function validateHeaders(headers: SecurityHeaders, requestBody: any): ValidationResponse {
   // Validate timestamp
   const requestTime = parseInt(headers['X-Request-Timestamp']);
   const currentTime = Date.now();
@@ -49,5 +49,20 @@ function validateHeaders(headers: SecurityHeaders): ValidationResponse {
   // Clean up old nonces (optional)
   setTimeout(() => usedNonces.delete(headers['X-Request-Nonce']), TIMESTAMP_TOLERANCE);
 
+  // Verify signature
+  if (!verifySignature(JSON.stringify(requestBody), headers['X-Request-Signature'], headers['X-Request-Timestamp'])) {
+    return { isValid: false, error: 'Invalid signature' };
+  }
+
   return { isValid: true };
+}
+
+function verifySignature(payload: string, signature: string, timestamp: string): boolean {
+  const data = `${payload}:${timestamp}`;
+  const expectedSignature = crypto
+    .createHmac('sha256', process.env.SECURITY_SIGNATURE_SECRET || '')
+    .update(data)
+    .digest('hex');
+  
+  return signature === expectedSignature;
 }

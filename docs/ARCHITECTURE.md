@@ -35,6 +35,26 @@ graph TB
 - Authentication Flow
 - Authorization Rules
 - Data Protection
+- Data Encryption:
+  - AES-256-GCM for sensitive data
+  - TLS 1.3 for data in transit
+  - End-to-end encryption for WebSocket
+  - Encrypted webhooks
+
+```mermaid
+graph TB
+    subgraph "Security Layer"
+        API_KEY[API Key Auth]
+        CORS[CORS Policy]
+        RATE[Rate Limiting]
+        VAL[Input Validation]
+        ENC[Encryption Layer]
+    end
+
+    ENC --> API_KEY
+    ENC --> WebSocket
+    ENC --> Webhooks
+```
 
 ## Complete System Architecture
 ```mermaid
@@ -195,21 +215,12 @@ graph TB
         CORS[CORS Policy]
         RATE[Rate Limiting]
         VAL[Input Validation]
+        ENC[Encryption Layer]
     end
 
-    subgraph "Monitoring"
-        LOG[Error Logging]
-        AUDIT[Audit Trail]
-        METRICS[Performance Metrics]
-    end
-
-    API_KEY --> API
-    CORS --> API
-    RATE --> API
-    VAL --> API
-    API --> LOG
-    API --> AUDIT
-    API --> METRICS
+    ENC --> API_KEY
+    ENC --> WebSocket
+    ENC --> Webhooks
 ```
 
 This architecture ensures:
