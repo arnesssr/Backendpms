@@ -1,31 +1,37 @@
 import axios from 'axios';
 import crypto from 'crypto';
 import { WebhookQueue } from './webhookQueueService';
+import { ApiClient } from './apiClient';
 
 export class WebhookService {
+  private apiClient: ApiClient;
   private webhookQueue: WebhookQueue;
 
   constructor() {
+    this.apiClient = ApiClient.getInstance();
     this.webhookQueue = WebhookQueue.getInstance();
   }
 
   async notify(endpoint: string, event: string, data: any) {
-    const signature = crypto
-      .createHmac('sha256', process.env.WEBHOOK_SECRET || '')
-      .update(JSON.stringify(data))
-      .digest('hex');
-
     try {
-      await axios.post(endpoint, data, {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Webhook-Signature': signature,
-          'X-Event-Type': event
+      await this.apiClient.request({
+        method: 'POST',
+        url: endpoint,
+        data: {
+          event,
+          data,
+          timestamp: new Date().toISOString()
         }
       });
     } catch (error) {
-      console.error('Webhook delivery failed:', error);
-      // Add to retry queue
+      // Add to retry queue with correct payload type
+      await this.webhookQueue.add('webhook-retry', {
+        event,
+        data,
+        timestamp: new Date().toISOString(),
+        endpoint,
+        attempts: 0
+      });
     }
   }
 

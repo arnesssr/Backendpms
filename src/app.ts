@@ -19,6 +19,9 @@ import notificationRoutes from './routes/notificationRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
 import { socketConfig } from './config/socketConfig';
 import { HealthcheckService } from './services/healthcheckService';
+import rateLimit from 'express-rate-limit';
+import compression from 'compression';
+import timeout from 'connect-timeout';
 
 export const app = express();
 const httpServer = createServer(app);
@@ -29,12 +32,22 @@ export const io = new Server(httpServer, socketConfig);
 // Socket.IO connection handler with type safety
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
-  
-  socket.on('subscribe_inventory', (productId: string) => {
-    socket.join(`inventory:${productId}`);
-    console.log(`Client ${socket.id} subscribed to inventory:${productId}`);
+
+  // Add error handling
+  socket.on('error', (error) => {
+    console.error('Socket error:', error);
+    socket.emit('error', { message: 'Internal WebSocket error' });
   });
-  
+
+  socket.on('subscribe_inventory', (productId: string) => {
+    try {
+      socket.join(`inventory:${productId}`);
+      console.log(`Client ${socket.id} subscribed to inventory:${productId}`);
+    } catch (error) {
+      socket.emit('subscription_error', { productId, error: 'Failed to subscribe' });
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
@@ -59,11 +72,39 @@ app.use(cors({
     process.env.STOREFRONT_URL || 'http://localhost:3000'
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-API-Key',
+    'X-Request-Signature',
+    'X-Request-Timestamp',
+    'X-Request-Nonce'
+  ],
+  maxAge: 600 // Cache preflight requests for 10 minutes
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Add timeout middleware
+app.use(timeout('30s'));
+app.use((req, res, next) => {
+  if (!req.timedout) next();
+});
+
+// Add rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: { error: 'Too many requests, please try again later.' }
+});
+app.use(limiter);
+
+// Add compression
+app.use(compression());
+
+// Add request size limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 app.use(requestLogger);
 
 // Add root route handler before other routes
@@ -81,10 +122,14 @@ app.use('/api/test', testRoutes);
 
 // Protected routes
 app.use('/api/pms', apiKeyAuth, pmsRoutes);
+app.use('/api/products', apiKeyAuth, productRoutes);
+app.use('/api/categories', apiKeyAuth, categoryRoutes);
+app.use('/api/orders', apiKeyAuth, orderRoutes);
+app.use('/api/inventory', apiKeyAuth, inventoryRoutes);
 app.use('/api/analytics', apiKeyAuth, analyticsRoutes);
-app.use('/api/inventory/alerts', apiKeyAuth, inventoryRoutes);
 app.use('/api/audit', apiKeyAuth, auditRoutes);
 app.use('/api/notifications', apiKeyAuth, notificationRoutes);
+app.use('/api/webhooks', apiKeyAuth, webhookRoutes);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {

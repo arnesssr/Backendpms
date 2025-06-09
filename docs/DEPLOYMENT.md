@@ -18,7 +18,7 @@ DATABASE_URL=postgresql://username:password@host:5432/dbname
 
 # CORS Settings
 PMS_URL=https://your-pms.vercel.app
-STOREFRONT_URL=https://your-storefront.vercel.app
+STOREFRONT_URL=https://your-storefront.vercel.app #anywhere even netlify etc not necessarily vercel
 
 # Image Storage (Cloudinary)
 CLOUDINARY_CLOUD_NAME=your_cloud_name
