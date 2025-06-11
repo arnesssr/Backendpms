@@ -55,6 +55,13 @@ Remaining Work: 5%
    - [ ] Setup E2E test suite
    - [ ] Add OpenAPI/Swagger docs
    - [ ] Complete API documentation
+   - [ ] PMS Integration Testing:
+     - [ ] Product API endpoints
+     - [ ] Inventory management endpoints
+     - [ ] Order processing endpoints
+     - [ ] Real-time WebSocket events
+     - [ ] Authentication flow
+     - [ ] Security headers validation
 
 4. Security & Integration Requirements
    - [x] Implement required security headers:
