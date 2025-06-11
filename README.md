@@ -3,13 +3,12 @@
 A robust, real-time enabled backend service for product management and inventory control.
 
 ## Documentation Quick Links
+- [Architecture](./docs/ARCHITECTURE.md)
 - [API Documentation](./docs/API.md)
-- [Architecture Overview](./docs/ARCHITECTURE.md)
-- [Security Implementation](./docs/SECURITY.md)
-- [Deployment Guide](./docs/DEPLOYMENT.md)
-- [Testing Guide](./docs/TESTING.md)
-- [Development Progress](./docs/TODO.md)
-- [Change History](./CHANGELOG.md)
+- [Events Flow](./docs/EVENTS_FLOW.md)
+- [Security](./docs/SECURITY.md)
+- [Integration](./docs/INTEGRATION.md)
+- [Todo List](./docs/TODO.md)
 
 ## System Overview
 Backend PMS provides:
@@ -134,7 +133,7 @@ Production deployment instructions available in [Deployment Guide](./docs/DEPLOY
 - Documentation: [Integration Guide](./docs/INTEGRATION.md)
 
 ### Storefront
-- Repository: [Storefront](https://github.com/arnesssr/storefront)
+- Repository: [Storefront](https://github.com/arnesssr/storefront---inventra)
 - Documentation: [Storefront Integration](./docs/STOREFRONT.md)
 
 ## Project Structure

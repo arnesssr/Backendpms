@@ -24,6 +24,7 @@ import compression from 'compression';
 import timeout from 'connect-timeout';
 import authRoutes from './routes/auth';
 
+
 export const app = express();
 const httpServer = createServer(app);
 
