@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.1.0] - 2024-03-12
+
+### Added
+- PMS Integration
+  - Product sync endpoints
+  - Inventory management
+  - Webhook handlers
+- Data Models
+  - PMS product schema
+  - Inventory movements
+  - Event tracking
+- Cache Layer
+  - Redis implementation
+  - Cache invalidation
+  - Request caching
+- Validation System
+  - Input validation
+  - Schema verification
+  - Error handling
+
+### Fixed
+- Redis client compatibility
+- TypeScript build issues
+- Cache service singleton pattern
+- API key validation
+
+### Security
+- Added API key validation
+- Request validation
+- Error handling improvements
+- Type safety enhancements
+
 ## [2.0.2] - 2024-03-14
 
 ### Added
