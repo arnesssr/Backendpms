@@ -1,71 +1,42 @@
-import type { Request, Response, NextFunction } from 'express'
-import { Clerk } from '@clerk/backend'
+import { Request, Response, NextFunction } from 'express';
+import { Clerk } from '@clerk/clerk-sdk-node';
+import { verifySignature } from '../utils/security';
 
-// Initialize Clerk with proper typing
-const clerk = new Clerk({ 
-  secretKey: process.env.CLERK_SECRET_KEY || '' 
-})
+const clerk = Clerk({ secretKey: process.env.CLERK_SECRET_KEY });
 
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: string
-      auth?: {
-        userId: string
-      }
-    }
-  }
-}
-
-// Define RequestHandler type for auth middleware
-type AuthHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => Promise<void>
-
-// Export auth middleware with correct type
-export const auth: AuthHandler = async (req, res, next) => {
-  const apiKey = req.headers['x-api-key']
-  const bearerToken = req.headers.authorization?.split(' ')[1]
-
+export async function verifyApiKey(req: Request, res: Response, next: NextFunction) {
   try {
-    // Check API key for Storefront requests
-    if (apiKey === process.env.API_KEY) {
-      return next()
+    // 1. Check API key
+    const apiKey = req.headers['x-api-key'];
+    if (!apiKey) {
+      return res.status(401).json({ error: 'Missing API key' });
     }
 
-    // Check Clerk session for PMS requests
-    if (bearerToken) {
-      try {
-        // Changed from verifySession to verifyToken
-        const session = await clerk.sessions.verifyToken(bearerToken)
-        if (session) {
-          req.user = session.userId
-          req.auth = { userId: session.userId }
-          return next()
+    if (apiKey !== process.env.API_KEY) {
+      return res.status(401).json({ error: 'Invalid API key' });
+    }
+
+    // 2. Verify bearer token if present
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      const [sessionId, sessionToken] = authHeader.split(' ')[1].split(':');
+      if (sessionId && sessionToken) {
+        try {
+          await clerk.sessions.verifySession(sessionId, sessionToken);
+        } catch (error) {
+          return res.status(401).json({ error: 'Invalid session' });
         }
-      } catch (error) {
-        console.error('Session verification error:', error)
       }
     }
 
-    res.status(401).json({ error: 'Unauthorized' })
+    next();
   } catch (error) {
-    console.error('Auth Error:', error)
-    res.status(401).json({ error: 'Authentication failed' })
+    console.error('Auth error:', error);
+    return res.status(401).json({ error: 'Authentication failed' });
   }
 }
 
-// Validate API Key middleware
-export const validateApiKey = (req: Request, res: Response, next: NextFunction) => {
-  const apiKey = req.headers['x-api-key'];
-  if (!apiKey || apiKey !== process.env.API_KEY) {
-    return res.status(401).json({ error: 'API key is required' });
-  }
-  next();
-};
-
-// Export type for use in routes
-export type AuthMiddleware = typeof auth
+// Add export for status check
+export function getAuthStatus(): boolean {
+  return Boolean(process.env.CLERK_SECRET_KEY && process.env.API_KEY);
+}

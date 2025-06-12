@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import postgres from 'postgres';
 import dotenv from 'dotenv';
+import { Pool } from 'pg';
 
 // Load environment variables
 dotenv.config();
@@ -152,4 +153,11 @@ process.on('SIGINT', async () => {
   process.exit(0)
 })
 
-export default db;
+const pool = new Pool({
+  connectionString: process.env.DATABASE_POOL_URL,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+export default pool;

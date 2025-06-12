@@ -4,7 +4,7 @@ import cors from 'cors';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 import { db, dbConnect } from './config/database';
-import productRoutes from './routes/productRoutes';
+import productRoutes from './routes/products';
 import categoryRoutes from './routes/categoryRoutes';
 import inventoryRoutes from './routes/inventoryRoutes';
 import orderRoutes from './routes/orderRoutes';
@@ -22,6 +22,8 @@ import { HealthcheckService } from './services/healthcheckService';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import timeout from 'connect-timeout';
+import authRoutes from './routes/auth';
+
 
 export const app = express();
 const httpServer = createServer(app);
@@ -130,6 +132,7 @@ app.use('/api/analytics', apiKeyAuth, analyticsRoutes);
 app.use('/api/audit', apiKeyAuth, auditRoutes);
 app.use('/api/notifications', apiKeyAuth, notificationRoutes);
 app.use('/api/webhooks', apiKeyAuth, webhookRoutes);
+app.use(authRoutes);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {

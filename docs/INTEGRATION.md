@@ -263,3 +263,127 @@ BACKEND_URL="[Your-Render-Backend-URL]"
 PMS_URL="[Your-Vercel-PMS-URL]"
 STOREFRONT_URL="[Your-Vercel-Storefront-URL]"
 ```
+
+# Integration Flow Documentation
+
+## System Integration Architecture
+```
+                           ┌───────────────┐
+                           │  PMS Frontend │
+                           └───────┬───────┘
+                                   │
+                    ┌──────────────┴──────────────┐
+                    │                             │
+            ┌───────▼────────┐           ┌───────▼────────┐
+            │   API Layer    │           │  WebSocket     │
+            │   (Express)    │           │   Server       │
+            └───────┬────────┘           └───────┬────────┘
+                    │                            │
+        ┌──────────┴─────────────┬──────────────┘
+        │                        │
+┌───────▼────────┐      ┌───────▼────────┐
+│  Redis Cache   │      │Event Processing │
+│  & Pub/Sub     │◀────▶│    System      │
+└───────┬────────┘      └───────┬────────┘
+        │                       │
+        │                       │
+┌───────▼────────┐     ┌───────▼────────┐
+│   Supabase     │     │   Cloudinary   │
+│   Database     │     │   Storage      │
+└───────┬────────┘     └───────┬────────┘
+        │                      │
+        └──────────┬──────────┘
+                   │
+           ┌───────▼───────┐
+           │   Webhook     │
+           │   Handlers    │
+           └───────┬───────┘
+                   │
+        ┌─────────┴──────────┐
+        │                    │
+┌───────▼────────┐  ┌───────▼────────┐
+│  Storefront    │  │  Third-party   │
+│    System      │  │   Services     │
+└───────┬────────┘  └───────┬────────┘
+        │                   │
+        └───────────┬───────┘
+                    │
+            ┌───────▼───────┐
+            │   Monitoring  │
+            │   & Metrics   │
+            └───────────────┘
+```
+
+## Integration Paths
+
+1. PMS -> Backend Flow
+```
+Request -> Auth -> Validation -> Processing -> Storage -> Events -> Response
+```
+
+2. Real-time Updates Flow
+```
+Change -> Event -> Redis -> WebSocket -> Clients
+```
+
+3. Storage Flow
+```
+Upload -> Validation -> Cloudinary -> Supabase -> Cache
+```
+
+4. Webhook Flow
+```
+Event -> Queue -> Process -> Notify -> Store
+```
+
+## Integration Points
+
+### 1. PMS Frontend Integration
+- REST API Endpoints
+- WebSocket Connections
+- Event Subscriptions
+- File Uploads
+
+### 2. Data Storage Integration
+- Supabase Tables
+- Redis Cache
+- Cloudinary Assets
+- Event Logs
+
+### 3. Real-time Integration
+- WebSocket Events
+- Redis Pub/Sub
+- Event Broadcasting
+- State Sync
+
+### 4. External Service Integration
+- Webhook Delivery
+- Third-party APIs
+- External Events
+- Service Discovery
+
+## Status Codes & Responses
+
+### Success Responses
+```json
+{
+  "success": true,
+  "data": {},
+  "timestamp": "ISO-DATE"
+}
+```
+
+### Error Responses
+```json
+{
+  "success": false,
+  "error": "ERROR_CODE",
+  "message": "Description",
+  "timestamp": "ISO-DATE"
+}
+```
+
+## Integration Health Monitoring
+```
+Service Health -> Metrics -> Alerts -> Logs -> Dashboard
+```
