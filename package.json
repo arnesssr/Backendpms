@@ -10,12 +10,13 @@
   "license": "CC-BY-NC-4.0",
   "scripts": {
     "dev": "ts-node src/server.ts",
-    "build": "./scripts/build.sh",
+    "build": "bash ./scripts/build.sh",
     "start": "node dist/server.js",
     "clean": "rm -rf dist node_modules",
     "test": "jest",
     "test:redis": "jest tests/integration/redis --forceExit",
-    "test:integration": "jest tests/integration --forceExit"
+    "test:integration": "jest tests/integration --forceExit",
+    "prebuild": "rm -rf dist"
   },
   "dependencies": {
     "@clerk/backend": "^0.38.15",
@@ -44,7 +45,8 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "typescript": "^5.8.3",
-    "zod": "^3.25.61"
+    "zod": "^3.25.61",
+    "@redis/client": "^2.0.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
