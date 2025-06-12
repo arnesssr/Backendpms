@@ -4,12 +4,13 @@ export class CacheService {
   private static instance: CacheService;
   private defaultTTL: number = 3600; // 1 hour
 
-  // Make constructor public
-  constructor() {
-    if (CacheService.instance) {
-      return CacheService.instance;
+  private constructor() {}
+
+  static getInstance(): CacheService {
+    if (!CacheService.instance) {
+      CacheService.instance = new CacheService();
     }
-    CacheService.instance = this;
+    return CacheService.instance;
   }
 
   async get<T>(key: string): Promise<T | null> {
@@ -41,5 +42,5 @@ export class CacheService {
   }
 }
 
-// Create singleton instance
-export const cacheService = new CacheService();
+// Export singleton instance instead of class
+export const cacheService = CacheService.getInstance();
