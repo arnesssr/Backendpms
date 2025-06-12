@@ -14,6 +14,6 @@ export class PMSNotificationService {
 
   async getPMSNotifications() {
     const notifications = await redis.lRange('pms:notifications', 0, -1);
-    return notifications.map(n => JSON.parse(n));
+    return notifications.map((n: string) => JSON.parse(n));
   }
 }

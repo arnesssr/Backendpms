@@ -1,100 +1,96 @@
 # Changelog
 
+All notable changes to this project will be documented in this file.
+
 ## [2.1.0] - 2024-03-12
 
 ### Added
-- PMS Integration
-  - Product sync endpoints
-  - Inventory management
-  - Webhook handlers
+- PMS Integration Layer
+  - Dedicated `/api/pms/*` routes
+  - Product synchronization endpoints
+  - Inventory management endpoints
+  - Webhook event handlers
+
 - Data Models
   - PMS product schema
-  - Inventory movements
-  - Event tracking
+  - Inventory movement tracking
+  - Event logging system
+  - Error tracking models
+
+- Validation System
+  - Input data validation
+  - Schema verification
+  - Image upload validation
+  - Webhook payload validation
+
 - Cache Layer
-  - Redis implementation
+  - Redis caching service
   - Cache invalidation
   - Request caching
-- Validation System
-  - Input validation
-  - Schema verification
-  - Error handling
+  - Redis client optimization
 
 ### Fixed
-- Redis client compatibility
-- TypeScript build issues
+- Redis client compatibility issues
+- TypeScript build errors
 - Cache service singleton pattern
 - API key validation
 
 ### Security
-- Added API key validation
-- Request validation
-- Error handling improvements
-- Type safety enhancements
+- Enhanced API key validation
+- Request signature verification
+- Data sanitization
+- Error masking
 
-## [2.0.2] - 2024-03-14
+### Documentation
+- Added architecture diagrams
+- Created event flow documentation
+- Updated integration guides
+- Added security documentation
 
-### Added
-- ✅ Audit System Implementation
-  - Full event history tracking
-  - Resource change tracking with diff
-  - User action logging
-  - Performance impact monitoring
-  - Redis-based audit log caching
-  - Configurable retention policies
-- ✅ Audit API Endpoints
-  - GET /api/audit/logs
-  - GET /api/audit/events/{entityId}
-  - GET /api/audit/changes/{resourceId}
-  - POST /api/audit/export
-
-### Enhanced
-- 🔄 Improved Redis Caching
-  - Optimized cache invalidation
-  - Better memory management
-  - Cache hit ratio monitoring
-- 📊 Enhanced Monitoring
-  - Detailed audit metrics
-  - Cache performance tracking
-  - System resource usage stats
-
-### Fixed
-- Audit log pagination issues
-- Redis memory leaks
-- Cache invalidation bugs
-- API response formatting
-
-## [2.0.1] - 2024-03-14
+## [2.0.0] - 2024-03-01
 
 ### Added
-- ✅ Redis Integration & Health Checks
-- ✅ Comprehensive Testing Documentation
-- ✅ Improved Server Startup Checks
+- Core Infrastructure
+  - Express server setup
+  - WebSocket integration
+  - Database connections
+  - Authentication system
 
-### Enhanced
-- 🔍 Better Health Monitoring
-- 🚦 Service Status Indicators
-- 📝 Documentation Links
+- Base Features
+  - Product management
+  - Inventory control
+  - Order processing
+  - Real-time updates
 
-## [2.0.0] - 2024-03-14
+- Authentication
+  - API key system
+  - JWT implementation
+  - Rate limiting
+  - CORS configuration
 
-### Added
-- ✅ Complete Product Publishing System
-- ✅ Inventory Reservation System with Redis
-- ✅ Order Processing with State Machine
-- ✅ Real-time Notification System
-- ✅ Analytics & Reporting System
-- ✅ WebSocket Integration with Socket.IO
-- ✅ Bull Queue for Background Jobs
+- Monitoring
+  - Health checks
+  - Error tracking
+  - Performance monitoring
+  - System metrics
 
-### Enhanced
-- 🔒 Improved Security with API Key Auth
-- 📝 Type-safe WebSocket Events
-- 🚀 Better Port Management
-- 📊 Enhanced Error Handling
+### Changed
+- Complete architecture redesign
+- New authentication system
+- Updated database schema
+- Enhanced error handling
 
-### Fixed
-- Port Conflict Resolution
-- WebSocket Type Definitions
-- Database Connection Stability
-- Import/Export Issues
+### Security
+- Added rate limiting
+- Implemented API key auth
+- Added request validation
+- Enhanced error handling
+
+## [1.0.0] - 2024-02-15
+
+### Initial Release
+- Basic Express server
+- Route handlers
+- Database integration
+- Authentication system
+- Basic documentation
