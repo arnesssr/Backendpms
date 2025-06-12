@@ -8,18 +8,18 @@ rm -rf dist
 
 # Install dependencies without frozen lockfile
 echo "📦 Installing dependencies..."
-pnpm install --no-frozen-lockfile
+pnpm install --frozen-lockfile
 
 # Ensure Redis dependencies
 echo "📦 Installing Redis dependencies..."
-pnpm add ioredis@5.6.1
+pnpm add @redis/client
 
 # Build TypeScript
 echo "🔨 Compiling TypeScript..."
-pnpm exec tsc
+pnpm exec tsc --project tsconfig.json
 
 # Copy environment template
 echo "⚙️ Setting up environment..."
-cp .env.example dist/.env
+cp .env.example dist/.env 2>/dev/null || :
 
 echo "✅ Build completed!"
