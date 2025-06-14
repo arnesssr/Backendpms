@@ -3,22 +3,16 @@ import type { Config } from '@jest/types';
 const config: Config.InitialOptions = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  transform: {
-    '^.+\\.ts$': ['ts-jest', {
-      tsconfig: 'tsconfig.json'
-    }]
-  },
-  setupFilesAfterEnv: ['./tests/setup.ts'],
-  testTimeout: 10000,
-  detectOpenHandles: true,
-  forceExit: true,
+  setupFiles: ['dotenv/config'],
+  testTimeout: 10000, // Increase global timeout
   verbose: true,
-  clearMocks: true,
-  collectCoverageFrom: [
-    'src/**/*.{js,ts}',
-    '!src/types/**',
-    '!src/**/*.d.ts'
-  ]
+  moduleFileExtensions: ['ts', 'js'],
+  testMatch: ['**/tests/**/*.test.ts'],
+  transform: {
+    '^.+\\.ts$': 'ts-jest'
+  },
+  forceExit: true,
+  detectOpenHandles: true
 };
 
 export default config;

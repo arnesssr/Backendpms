@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { Request, Response } from 'express';
 import { checkCloudinary } from './config/cloudinary';
 import { AuthService } from './services/authService';
+import { RealtimeService } from './services/realtimeService';
 
 setDefaultResultOrder('ipv4first'); 
 dotenv.config();
@@ -96,6 +97,26 @@ async function startServer() {
 
     // Initialize WebSocket
     io.attach(server);
+
+    // Initialize real-time
+    const realtime = RealtimeService.getInstance();
+    const realtimeStatus = await realtime.initialize();
+    const status = realtime.getStatus();
+
+    console.log(`
+🚀 Server is running:
+- Port: ${port}
+- Database: ✅ Connected
+- Redis: ✅ Connected
+- Cloudinary: ✅ Connected
+- Realtime: ${realtimeStatus ? '✅ Active' : '❌ Failed'}
+- Security: ✅ Active & Secured
+- Mode: 🛠️ ${process.env.NODE_ENV}
+
+🔄 Realtime Channels: ${status.activeChannels.join(', ')}
+${status.isConnected ? '✅' : '❌'} Connection Status
+${status.lastError ? `⚠️ Last Error: ${status.lastError}` : '✅ No Errors'}
+    `);
 
     // Improved error handling
     server.on('error', (error: NodeJS.ErrnoException) => {

@@ -6,7 +6,7 @@ export class InventoryController {
   private inventoryService: InventoryService;
 
   constructor() {
-    this.inventoryService = new InventoryService();
+    this.inventoryService = InventoryService.getInstance(); // Use getInstance instead of new
   }
 
   async recordMovement(req: Request, res: Response) {

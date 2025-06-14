@@ -14,3 +14,8 @@ redisClient.connect().catch(console.error);
 // Add named export in addition to default export
 export { redisClient as redis };
 export default redisClient;
+
+// Add cleanup helper
+export const cleanupRedis = async () => {
+  await redisClient.quit();
+};

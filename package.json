@@ -13,7 +13,7 @@
     "build": "bash ./scripts/build.sh",
     "start": "node dist/server.js",
     "clean": "rm -rf dist node_modules",
-    "test": "jest",
+    "test": "jest --config jest.config.ts",
     "test:redis": "jest tests/integration/redis --forceExit",
     "test:integration": "jest tests/integration --forceExit",
     "prebuild": "rm -rf dist"
