@@ -103,10 +103,9 @@ export class MonitoringService {
   }
 
   private async updateResponseTimeMetrics(metrics: PerformanceMetrics): Promise<void> {
-    await redis.zadd(
+    await redis.zAdd(
       `${this.METRICS_KEY}:response_times`,
-      metrics.timestamp,
-      JSON.stringify(metrics)
+      { score: metrics.timestamp, value: JSON.stringify(metrics) }
     );
   }
 
@@ -116,8 +115,8 @@ export class MonitoringService {
     
     await redis
       .multi()
-      .zadd(key, now, now.toString())
-      .zremrangebyscore(key, '-inf', now - (this.RATE_LIMIT_WINDOW * 1000))
+      .zAdd(key, { score: now, value: now.toString() })
+      .zRemRangeByScore(key, '-inf', now - (this.RATE_LIMIT_WINDOW * 1000))
       .exec();
   }
 
@@ -133,12 +132,11 @@ export class MonitoringService {
   }
 
   private async getCurrentRequestRate(endpoint: string): Promise<number> {
-    const count = await redis.zcount(
+    return redis.zCount(
       `${this.METRICS_KEY}:rates:${endpoint}`,
       Date.now() - (this.RATE_LIMIT_WINDOW * 1000),
       '+inf'
     );
-    return count;
   }
 
   private async triggerAlert(type: string, data: any): Promise<void> {
