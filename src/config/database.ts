@@ -172,6 +172,8 @@ const pool = new Pool({
 export const db = {
   sql,
   pool,
+  query: sql, // Add direct query access
+  transaction: sql.begin, // Add transaction support
   
   async batchProcess<T>(
     items: T[],

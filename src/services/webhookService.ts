@@ -81,7 +81,7 @@ export class WebhookService {
       signature: this.signPayload(payload)
     };
 
-    await redis.lpush('webhook:queue', JSON.stringify(event));
+    await redis.lPush('webhook:queue', JSON.stringify(event));
     await this.logEvent(event.id, 'queued', event);
     return event.id;
   }
@@ -101,7 +101,7 @@ export class WebhookService {
   }
 
   async processQueue(): Promise<void> {
-    const event = await redis.rpop('webhook:queue');
+    const event = await redis.rPop('webhook:queue');
     if (!event) return;
 
     const webhookEvent: WebhookEvent = JSON.parse(event);
@@ -119,10 +119,9 @@ export class WebhookService {
 
     if (event.attempts < this.MAX_RETRIES) {
       const delay = this.RETRY_DELAYS[event.attempts - 1];
-      await redis.zadd(
+      await redis.zAdd(
         'webhook:retry',
-        Date.now() + delay * 1000,
-        JSON.stringify(event)
+        { score: Date.now() + delay * 1000, value: JSON.stringify(event) }
       );
       await this.logEvent(event.id, 'retry_scheduled', event);
     } else {
