@@ -43,7 +43,6 @@
     ],
     "types": [
       "node",
-      "express",
       "jest"
     ],
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */

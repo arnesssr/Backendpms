@@ -2,9 +2,8 @@ import { redis } from '../config/redis';
 
 export class CacheService {
   private static instance: CacheService;
-  private defaultTTL: number = 3600; // 1 hour
-
-  private constructor() {}
+  private readonly DEFAULT_TTL = 3600; // 1 hour
+  get: any;
 
   static getInstance(): CacheService {
     if (!CacheService.instance) {
@@ -13,25 +12,18 @@ export class CacheService {
     return CacheService.instance;
   }
 
-  async get<T>(key: string): Promise<T | null> {
-    const data = await redis.get(key);
-    return data ? JSON.parse(data) : null;
-  }
+  async getCached<T>(key: string, fetchFn: () => Promise<T>, ttl?: number): Promise<T> {
+    // Try cache first
+    const cached = await redis.get(key);
+    if (cached) return JSON.parse(cached);
 
-  async set(key: string, value: string, ttlSeconds: number = 3600): Promise<boolean> {
-    try {
-      const result = await redis.set(key, value, {
-        EX: ttlSeconds // Expiration in seconds
-      });
-      return result === 'OK';
-    } catch (error) {
-      console.error('Cache set error:', error);
-      return false;
-    }
-  }
-
-  async invalidate(key: string): Promise<void> {
-    await redis.del(key);
+    // Fetch fresh data
+    const data = await fetchFn();
+    
+    // Cache the result
+    await redis.set(key, JSON.stringify(data), 'EX', ttl || this.DEFAULT_TTL);
+    
+    return data;
   }
 
   async invalidatePattern(pattern: string): Promise<void> {
@@ -39,6 +31,10 @@ export class CacheService {
     if (keys.length) {
       await redis.del(keys);
     }
+  }
+
+  async warmCache(key: string, data: any, ttl?: number): Promise<void> {
+    await redis.set(key, JSON.stringify(data), 'EX', ttl || this.DEFAULT_TTL);
   }
 }
 

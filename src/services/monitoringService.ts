@@ -1,5 +1,7 @@
 import { supabase } from '../config/database';
 import { io } from '../app';
+import { redis } from '../config/redis';
+import { Request, Response } from 'express';
 
 interface SystemMetrics {
   cpu_usage: number;
@@ -8,6 +10,13 @@ interface SystemMetrics {
   request_count: number;
   error_count: number;
   response_time: number;
+}
+
+interface PerformanceMetrics {
+  responseTime: number;
+  endpoint: string;
+  method: string;
+  timestamp: number;
 }
 
 export class MonitoringService {
@@ -19,6 +28,13 @@ export class MonitoringService {
     request_count: 0,
     error_count: 0,
     response_time: 0
+  };
+  private readonly METRICS_KEY = 'metrics:api';
+  private readonly RATE_LIMIT_WINDOW = 60; // 1 minute
+  private readonly ALERT_THRESHOLDS = {
+    responseTime: 1000, // 1 second
+    errorRate: 0.05, // 5%
+    requestRate: 1000 // requests per minute
   };
 
   private constructor() {
@@ -69,5 +85,67 @@ export class MonitoringService {
     this.metrics.request_count++;
     this.metrics.response_time = 
       (this.metrics.response_time + responseTime) / 2;
+  }
+
+  async recordMetrics(req: Request, res: Response, duration: number): Promise<void> {
+    const metrics: PerformanceMetrics = {
+      responseTime: duration,
+      endpoint: req.path,
+      method: req.method,
+      timestamp: Date.now()
+    };
+
+    await Promise.all([
+      this.updateResponseTimeMetrics(metrics),
+      this.updateRequestRateMetrics(req.path),
+      this.checkThresholds(metrics)
+    ]);
+  }
+
+  private async updateResponseTimeMetrics(metrics: PerformanceMetrics): Promise<void> {
+    await redis.zadd(
+      `${this.METRICS_KEY}:response_times`,
+      metrics.timestamp,
+      JSON.stringify(metrics)
+    );
+  }
+
+  private async updateRequestRateMetrics(endpoint: string): Promise<void> {
+    const now = Date.now();
+    const key = `${this.METRICS_KEY}:rates:${endpoint}`;
+    
+    await redis
+      .multi()
+      .zadd(key, now, now.toString())
+      .zremrangebyscore(key, '-inf', now - (this.RATE_LIMIT_WINDOW * 1000))
+      .exec();
+  }
+
+  private async checkThresholds(metrics: PerformanceMetrics): Promise<void> {
+    if (metrics.responseTime > this.ALERT_THRESHOLDS.responseTime) {
+      await this.triggerAlert('responseTime', metrics);
+    }
+
+    const requestRate = await this.getCurrentRequestRate(metrics.endpoint);
+    if (requestRate > this.ALERT_THRESHOLDS.requestRate) {
+      await this.triggerAlert('requestRate', { endpoint: metrics.endpoint, rate: requestRate });
+    }
+  }
+
+  private async getCurrentRequestRate(endpoint: string): Promise<number> {
+    const count = await redis.zcount(
+      `${this.METRICS_KEY}:rates:${endpoint}`,
+      Date.now() - (this.RATE_LIMIT_WINDOW * 1000),
+      '+inf'
+    );
+    return count;
+  }
+
+  private async triggerAlert(type: string, data: any): Promise<void> {
+    await redis.publish('monitoring:alerts', JSON.stringify({
+      type,
+      data,
+      timestamp: new Date().toISOString()
+    }));
   }
 }

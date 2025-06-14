@@ -1,4 +1,10 @@
+import { Pool } from 'pg';
+
 declare module 'pg' {
+  interface Pool {
+    end(callback?: (error?: Error) => void): void;
+  }
+
   export interface Pool {
     query: (text: string, params?: any[]) => Promise<any>;
     connect: () => Promise<PoolClient>;
