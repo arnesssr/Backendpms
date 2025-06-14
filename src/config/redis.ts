@@ -1,30 +1,21 @@
-import IORedis, { RedisOptions } from 'ioredis';
+import { createClient, RedisClientType } from 'redis';
 
-const redisOptions: RedisOptions = {
-  maxRetriesPerRequest: 3,
-  enableReadyCheck: true,
-  lazyConnect: true, // Don't connect immediately
-  autoResubscribe: false,
-  autoResendUnfulfilledCommands: false
+const redisClient: RedisClientType = createClient({
+  url: process.env.REDIS_URL,
+  socket: {
+    reconnectStrategy: (retries: number) => Math.min(retries * 50, 1000)
+  }
+});
+
+// Initialize connection
+redisClient.on('error', (err: Error) => console.error('Redis Client Error:', err));
+redisClient.connect().catch(console.error);
+
+// Add named export in addition to default export
+export { redisClient as redis };
+export default redisClient;
+
+// Add cleanup helper
+export const cleanupRedis = async () => {
+  await redisClient.quit();
 };
-
-class RedisClient {
-  private static instance: IORedis;
-
-  public static getInstance(): IORedis {
-    if (!RedisClient.instance) {
-      RedisClient.instance = new IORedis(process.env.REDIS_URL!, redisOptions);
-    }
-    return RedisClient.instance;
-  }
-
-  public static async closeConnection() {
-    if (RedisClient.instance) {
-      await RedisClient.instance.quit();
-      RedisClient.instance = null!;
-    }
-  }
-}
-
-export const redis = RedisClient.getInstance();
-export const closeRedis = RedisClient.closeConnection;

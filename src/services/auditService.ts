@@ -46,7 +46,7 @@ export class AuditService {
 
   private async cacheEvent(event: AuditEvent) {
     const key = `${this.CACHE_PREFIX}${event.resourceType}:${event.resourceId}`;
-    await redis.setex(key, this.CACHE_TTL, JSON.stringify(event));
+    await redis.setEx(key, this.CACHE_TTL, JSON.stringify(event));
   }
 
   async getResourceHistory(resourceType: string, resourceId: string) {

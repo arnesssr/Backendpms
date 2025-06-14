@@ -1,10 +1,12 @@
 import { setDefaultResultOrder } from 'dns';
 import { app, io } from './app';
 import { dbConnect } from './config/database';
-import { redis } from './config/redis';
+import redisClient from './config/redis';
 import dotenv from 'dotenv';
 import { Request, Response } from 'express';
 import { checkCloudinary } from './config/cloudinary';
+import { AuthService } from './services/authService';
+import { RealtimeService } from './services/realtimeService';
 
 setDefaultResultOrder('ipv4first'); 
 dotenv.config();
@@ -59,7 +61,7 @@ async function startServer() {
     }
 
     // Check Redis connection
-    const redisConnected = await redis.ping().then(() => true).catch(() => false);
+    const redisConnected = await redisClient.ping().then(() => true).catch(() => false);
     if (!redisConnected) {
       console.warn('⚠️ Starting server with limited functionality - Redis unavailable');
     } else {
@@ -78,17 +80,43 @@ async function startServer() {
     const port = parseInt(process.env.PORT || '10000', 10);
     
     const server = app.listen(port, '0.0.0.0', () => {
-      console.log(`\n🚀 Server is running:
-- Port: ${port}
-- Database: ${dbConnected ? '✅ Connected' : '⚠️ Unavailable'}
-- Redis: ${redisConnected ? '✅ Connected' : '⚠️ Unavailable'}
-- Cloudinary: ${cloudinaryStatus.healthy ? '✅ Connected' : '⚠️ Unavailable'}
-- Mode: ${process.env.NODE_ENV === 'production' ? '🏭 Production' : '🛠️ Development'}
+      const dbStatus = dbConnected ? '✅ Connected' : '⚠️ Unavailable';
+      const redisStatus = redisConnected ? '✅ Connected' : '⚠️ Unavailable';
+      const cloudinaryStatusMessage = cloudinaryStatus.healthy ? '✅ Connected' : '⚠️ Unavailable';
+
+      console.log(`
+🚀 Server is running:
+- Port: ${PORT}
+- Database: ${dbStatus}
+- Redis: ${redisStatus}
+- Cloudinary: ${cloudinaryStatusMessage}
+- Security: ${AuthService.getStatus()}
+- Mode: ${process.env.NODE_ENV === 'production' ? '🚀 Production' : '🛠️ Development'}
 `);
     });
 
     // Initialize WebSocket
     io.attach(server);
+
+    // Initialize real-time
+    const realtime = RealtimeService.getInstance();
+    const realtimeStatus = await realtime.initialize();
+    const status = realtime.getStatus();
+
+    console.log(`
+🚀 Server is running:
+- Port: ${port}
+- Database: ✅ Connected
+- Redis: ✅ Connected
+- Cloudinary: ✅ Connected
+- Realtime: ${realtimeStatus ? '✅ Active' : '❌ Failed'}
+- Security: ✅ Active & Secured
+- Mode: 🛠️ ${process.env.NODE_ENV}
+
+🔄 Realtime Channels: ${status.activeChannels.join(', ')}
+${status.isConnected ? '✅' : '❌'} Connection Status
+${status.lastError ? `⚠️ Last Error: ${status.lastError}` : '✅ No Errors'}
+    `);
 
     // Improved error handling
     server.on('error', (error: NodeJS.ErrnoException) => {

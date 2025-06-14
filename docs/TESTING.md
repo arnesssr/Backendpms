@@ -28,7 +28,7 @@ pnpm test:unit
 
 # Run specific service tests
 pnpm test src/services/__tests__/productService.test.ts
-pnpm test src/services/__tests__/orderService.test.ts
+pnpm test src/services/__tests__/orderService.test.ts #follow that pattern to run other tests
 ```
 
 #### Health Check Tests

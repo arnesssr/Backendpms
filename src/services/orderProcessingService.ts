@@ -57,7 +57,7 @@ export class OrderProcessingService {
     io.emit('order_created', { orderId: order.id, status: 'pending' });
 
     // Queue webhook notification
-    await this.webhookQueue.add('order.created', {
+    await WebhookQueue.getInstance().add('order.created', {
       event: 'order.created',
       data: order,
       timestamp: new Date().toISOString()
@@ -120,7 +120,7 @@ export class OrderProcessingService {
     io.emit('order_updated', { orderId: order.id, status: order.status });
 
     // Queue webhook notification
-    await this.webhookQueue.add('order.updated', {
+    await WebhookQueue.getInstance().add('order.updated', {
       event: 'order.updated',
       data: order,
       timestamp: new Date().toISOString()

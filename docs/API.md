@@ -143,3 +143,61 @@ REDIS_TOKEN=your_upstash_token
 - 1000 WebSocket messages per minute
 - 50 concurrent connections per client
 ```
+
+# API Documentation
+
+## API Flow Architecture
+```
+                      ┌─────────────────┐
+                      │   API Request   │
+                      └────────┬────────┘
+                              │
+                   ┌──────────┴──────────┐
+                   │    Authentication   │
+                   └──────────┬──────────┘
+                              │
+           ┌─────────────────┬┴────────────────┐
+           │                 │                 │
+   ┌───────▼──────┐  ┌──────▼─────┐  ┌───────▼──────┐
+   │    /pms/*    │  │ /products/ │  │ /inventory/  │
+   │  Endpoints   │  │ Endpoints  │  │  Endpoints   │
+   └───────┬──────┘  └──────┬─────┘  └───────┬──────┘
+           │                │                 │
+   ┌───────▼──────┐  ┌──────▼─────┐  ┌───────▼──────┐
+   │ PMS Service  │  │  Product   │  │  Inventory   │
+   │    Layer     │  │  Service   │  │   Service    │
+   └───────┬──────┘  └──────┬─────┘  └───────┬──────┘
+           │                │                 │
+           └────────┬──────┴─────────────────┘
+                    │
+            ┌───────▼───────┐
+            │   Database    │
+            │    Layer      │
+            └───────┬───────┘
+                    │
+            ┌───────▼───────┐
+            │    Cache      │
+            │    Layer      │
+            └───────┬───────┘
+                    │
+            ┌───────▼───────┐
+            │   Response    │
+            └───────────────┘
+```
+
+## API Routes
+
+### PMS Integration
+- Base URL: `/api/pms`
+- Authentication: API Key required
+- Rate Limit: 100 requests/minute
+
+### Product Management
+- Base URL: `/api/products`
+- Caching: 5 minutes
+- Real-time updates via WebSocket
+
+### Inventory Control
+- Base URL: `/api/inventory`
+- Real-time sync enabled
+- Transaction support

@@ -1,5 +1,5 @@
 import { supabase } from '../config/database';
-import { WebhookQueue } from './webhookQueueService';
+import WebhookQueue from './webhookQueueService';
 import { io } from '../app';
 
 interface ReservationRequest {
