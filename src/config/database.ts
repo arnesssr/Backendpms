@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import postgres from 'postgres';
 import dotenv from 'dotenv';
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 
 // Load environment variables
 dotenv.config();
@@ -48,8 +48,8 @@ if (!DATABASE_URL) {
   throw new Error('Database connection URL not configured');
 }
 
-// Create database instance with environment-specific configuration
-export const db = postgres(DATABASE_URL, {
+// Create database instance with postgres
+const sql = postgres(DATABASE_URL, {
   ssl: { rejectUnauthorized: false },
   idle_timeout: DEFAULT_CONFIG.idle_timeout,
   max: process.env.NODE_ENV === 'production' ? 20 : DEFAULT_CONFIG.max_connections,
@@ -105,9 +105,9 @@ export const getConnectionMetrics = () => {
 // Health check with detailed status
 export const getDatabaseHealth = async () => {
   try {
-    const startTime = Date.now()
-    await db`SELECT 1`
-    const responseTime = Date.now() - startTime
+    const startTime = Date.now();
+    await db.sql`SELECT 1`; // Use db.sql instead of db
+    const responseTime = Date.now() - startTime;
 
     return {
       status: 'healthy',
@@ -129,14 +129,22 @@ export const getDatabaseHealth = async () => {
 }
 
 // Graceful shutdown
-export const closeDatabase = async () => {
+export async function closeDatabase() {
   try {
-    console.log('Closing database connections...')
-    await db.end()
-    console.log('Database connections closed')
+    console.log('Closing database connections...');
+    await db.sql.end();
+    
+    await new Promise<void>((resolve, reject) => {
+      pool.end((error?: Error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+    
+    console.log('Database connections closed');
   } catch (error) {
-    console.error('Error closing database:', error)
-    throw error
+    console.error('Error closing database:', error);
+    throw error;
   }
 }
 
@@ -160,4 +168,34 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
-export default pool;
+// Export the main db instance with extended functionality
+export const db = {
+  sql,
+  pool,
+  
+  async batchProcess<T>(
+    items: T[],
+    batchSize: number,
+    processFn: (batch: T[]) => Promise<void>
+  ): Promise<void> {
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      await processFn(batch);
+    }
+  },
+
+  async analyzeQuery(query: string): Promise<any> {
+    const result = await pool.query(`EXPLAIN ANALYZE ${query}`);
+    return result.rows;
+  },
+
+  async end(): Promise<void> {
+    await db.sql.end();
+    await new Promise<void>((resolve, reject) => {
+      pool.end((error?: Error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+  }
+};

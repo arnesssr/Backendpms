@@ -1,9 +1,9 @@
-import pool from '../config/database';
+import { db } from '../config/database';
 import redisClient from '../config/redis';
 
 export async function getDatabaseStatus() {
   try {
-    await pool.query('SELECT 1');
+    await db.pool.query('SELECT 1');
     return {
       healthy: true,
       latency: 0

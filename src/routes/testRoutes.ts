@@ -18,7 +18,8 @@ router.get('/connection', async (req, res) => {
 // Database test endpoint
 router.get('/database', async (req, res) => {
   try {
-    await db`SELECT 1+1 AS result`;
+    // Fix: Use db.sql for queries
+    await db.sql`SELECT 1+1 AS result`;
     res.json({
       connected: true,
       timestamp: new Date().toISOString()
@@ -40,7 +41,8 @@ router.get('/auth', (req, res) => {
 // Database reset endpoint for tests
 router.post('/reset-db', async (req, res) => {
   try {
-    await db`TRUNCATE TABLE products CASCADE`;
+    // Fix: Use db.sql for truncate
+    await db.sql`TRUNCATE TABLE products CASCADE`;
     res.json({ message: 'Database reset successful' });
   } catch (error) {
     console.error('Reset DB error:', error);
@@ -51,7 +53,7 @@ router.post('/reset-db', async (req, res) => {
 // Add debug endpoint
 router.get('/debug', async (req, res) => {
   try {
-    const [result] = await db`
+    const [result] = await db.sql`
       SELECT 
         COUNT(*) as total,
         COUNT(*) FILTER (WHERE status = 'published') as published

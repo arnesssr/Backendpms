@@ -5,7 +5,7 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const categories = await db`
+    const categories = await db.sql`
       SELECT * FROM categories 
       ORDER BY name ASC
     `;
@@ -19,7 +19,7 @@ router.get('/', async (req: Request, res: Response) => {
 router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, description } = req.body;
-    const [category] = await db`
+    const [category] = await db.sql`
       INSERT INTO categories (id, name, description)
       VALUES (gen_random_uuid(), ${name}, ${description})
       RETURNING *
@@ -39,9 +39,9 @@ router.put('/:id', async (req: Request, res: Response) => {
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
 
-    const [updated] = await db`
+    const [updated] = await db.sql`
       UPDATE categories 
-      SET ${db(updates)}
+      SET ${db.sql(updates)}
       WHERE id = ${req.params.id}
       RETURNING *
     `;
@@ -59,7 +59,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 
 router.get('/:id/products', async (req: Request, res: Response) => {
   try {
-    const products = await db`
+    const products = await db.sql`
       SELECT * FROM products 
       WHERE category = (
         SELECT name FROM categories WHERE id = ${req.params.id}
@@ -73,17 +73,27 @@ router.get('/:id/products', async (req: Request, res: Response) => {
 
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const result = await db`
-      DELETE FROM categories 
-      WHERE id = ${req.params.id}
-      RETURNING *
+    // Check for products in category
+    const products = await db.sql`
+      SELECT id FROM products 
+      WHERE category = ${req.params.id}
+      LIMIT 1
     `;
     
-    if (result.length === 0) {
+    if (products.length > 0) {
+      return res.status(400).json({ error: 'Cannot delete category with existing products' });
+    }
+
+    const result = await db.sql`
+      DELETE FROM categories 
+      WHERE id = ${req.params.id}
+    `;
+    
+    if (result.count === 0) {
       return res.status(404).json({ error: 'Category not found' });
     }
     
-    res.json(result[0]);
+    res.status(204).send();
   } catch (error) {
     console.error('Delete category error:', error);
     res.status(500).json({ error: 'Failed to delete category' });

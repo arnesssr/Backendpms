@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { MonitoringService } from '../services/monitoringService';
 
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
   const startTime = Date.now();
@@ -19,6 +20,9 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
     console.log('Status:', res.statusCode);
     console.log('Duration:', duration + 'ms');
     console.log('------------------------');
+
+    // Add performance metrics collection
+    MonitoringService.getInstance().recordMetrics(req, res, duration).catch(console.error);
   });
 
   next();

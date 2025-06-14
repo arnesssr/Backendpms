@@ -12,8 +12,8 @@ export async function runMigrations() {
     // Run each migration in order
     for (const file of sqlFiles) {
       console.log(`Running migration: ${file}`);
-      const sql = await fs.readFile(path.join(migrationsDir, file), 'utf8');
-      await db`${sql}`;
+      const sqlContent = await fs.readFile(path.join(migrationsDir, file), 'utf8');
+      await db.sql`${sqlContent}`; // Use db.sql instead of db
     }
 
     console.log('Migrations completed successfully');

@@ -79,7 +79,9 @@ export interface DatabaseConfig {
 // Add Pool methods interface
 declare module 'pg' {
   interface Pool {
-    end(): Promise<void>;
-    // Add other Pool methods if needed
+    end(callback?: (error?: Error) => void): void;
+    // Remove duplicate connect declaration since it's already in @types/pg
   }
+
+  // Remove PoolClient interface since it's already defined in @types/pg
 }
