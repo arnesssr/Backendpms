@@ -146,4 +146,14 @@ export class MonitoringService {
       timestamp: new Date().toISOString()
     }));
   }
+
+  async updateMetrics() {
+    await redis.zAdd('metrics', {
+      score: Date.now(),
+      value: JSON.stringify(this.metrics)
+    });
+    
+    await redis.lPush('logs', JSON.stringify(this.metrics));
+    const count = await redis.zCount('key', '-inf', '+inf');
+  }
 }
