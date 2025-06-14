@@ -168,9 +168,9 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
-// Add these type definitions
-type SqlTransaction = postgres.TransactionSql<{}>;
-type UnwrapArray<T> = T extends Array<infer U> ? U : T;
+// Update type definitions
+type SqlTransaction = postgres.Sql<{}>;
+type PostgresResult<T> = T extends Array<any> ? T[0] : T;
 type TransactionCallback<T> = (sql: SqlTransaction) => Promise<T>;
 
 export const db = {
@@ -179,10 +179,14 @@ export const db = {
   pool,      // Connection pool
   
   // Transaction support
-  async transaction<T>(callback: TransactionCallback<T>): Promise<UnwrapArray<T>> {
-    return sql.begin(async (transaction: SqlTransaction) => {
+  async transaction<T>(callback: TransactionCallback<T>): Promise<PostgresResult<T>> {
+    return sql.begin(async (transaction) => {
       const result = await callback(transaction);
-      return Array.isArray(result) ? result[0] : result;
+      // Handle postgres result unwrapping
+      if (Array.isArray(result) && result.length === 1) {
+        return result[0] as PostgresResult<T>;
+      }
+      return result as PostgresResult<T>;
     });
   },
 
