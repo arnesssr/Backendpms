@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
+import { UploadedFile } from 'express-fileupload';
 import { db } from '../config/database';
-import { imageService } from '../services/imageService';
+import { ImageService } from '../services/imageService';
 import { productPublishService } from '../services/productPublishService';
 import { supabase } from '../services/supabaseService';
 import type { Product } from '../types/models/product.types';
@@ -13,10 +14,16 @@ interface UploadedImage {
   height: number;
 }
 
+interface FileRequest extends Request {
+  files?: {
+    images?: UploadedFile | UploadedFile[];
+  } | null;
+}
+
 export const productController = {
   async getAllProducts(req: Request, res: Response) {
     try {
-      const products = await db`
+      const products = await db.sql`
         SELECT * FROM products
         WHERE status = 'published'
       `;
@@ -27,17 +34,17 @@ export const productController = {
     }
   },
 
-  async createProduct(req: Request, res: Response) {
+  async createProduct(req: FileRequest, res: Response) {
     try {
-      const files = req.files as Express.Multer.File[];
+      const files = req.files?.images as unknown as Express.Multer.File[];
       
       // Upload images first
-      const imagePromises = files.map(file => imageService.uploadImage(file));
+      const imagePromises = files.map(file => ImageService.uploadImage(file));
       const uploadedImages = await Promise.all(imagePromises);
 
       // Create product with images
-      const [product] = await db`
-        INSERT INTO products ${db(
+      const [product] = await db.sql`
+        INSERT INTO products ${db.sql(
           {
             ...req.body,
             images: uploadedImages,
@@ -55,20 +62,20 @@ export const productController = {
     }
   },
 
-  async updateProduct(req: Request, res: Response) {
+  async updateProduct(req: FileRequest, res: Response) {
     try {
       const { id } = req.params;
-      const files = req.files as Express.Multer.File[];
+      const files = req.files?.images as unknown as Express.Multer.File[];
       
       let updatedImages: UploadedImage[] = [];
       if (files?.length) {
-        const imagePromises = files.map(file => imageService.uploadImage(file));
+        const imagePromises = files.map(file => ImageService.uploadImage(file));
         updatedImages = await Promise.all(imagePromises);
       }
 
-      const [updated] = await db`
+      const [updated] = await db.sql`
         UPDATE products 
-        SET ${db({
+        SET ${db.sql({
           ...req.body,
           ...(updatedImages.length && { images: updatedImages }),
           updated_at: new Date()
@@ -99,8 +106,8 @@ export const productController = {
 
   async uploadImages(req: Request, res: Response) {
     try {
-      const files = req.files as Express.Multer.File[];
-      const imagePromises = files.map(file => imageService.uploadImage(file));
+      const files = req.files as unknown as Express.Multer.File[];
+      const imagePromises = files.map(file => ImageService.uploadImage(file));
       const uploadedImages = await Promise.all(imagePromises);
       
       res.json(uploadedImages);

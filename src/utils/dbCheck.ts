@@ -4,7 +4,7 @@ export const checkTables = async () => {
   console.log('🔍 Checking database tables...');
   
   try {
-    const tables = await db`
+    const tables = await db.sql`
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public'
@@ -34,3 +34,7 @@ export const checkTables = async () => {
     return false;
   }
 };
+
+export async function checkTable<T>(tableName: string, check: (t: T) => boolean): Promise<void> {
+  // ...existing code...
+}

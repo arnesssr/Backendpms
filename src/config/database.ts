@@ -168,13 +168,24 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
-// Export the main db instance with extended functionality
+// Add these type definitions
+type SqlTransaction = postgres.TransactionSql<{}>;
+type UnwrapArray<T> = T extends Array<infer U> ? U : T;
+type TransactionCallback<T> = (sql: SqlTransaction) => Promise<T>;
+
 export const db = {
-  sql,
-  pool,
-  query: sql, // Add direct query access
-  transaction: sql.begin, // Add transaction support
+  query: sql, // For direct SQL queries
+  sql,       // For template literals
+  pool,      // Connection pool
   
+  // Transaction support
+  async transaction<T>(callback: TransactionCallback<T>): Promise<UnwrapArray<T>> {
+    return sql.begin(async (transaction: SqlTransaction) => {
+      const result = await callback(transaction);
+      return Array.isArray(result) ? result[0] : result;
+    });
+  },
+
   async batchProcess<T>(
     items: T[],
     batchSize: number,

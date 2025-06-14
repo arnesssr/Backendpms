@@ -19,6 +19,9 @@ interface ImageOptions {
 }
 
 export class ImageService {
+  static uploadImage(file: Express.Multer.File): any {
+    throw new Error('Method not implemented.');
+  }
   private static instance: ImageService;
   private readonly defaultOptions: ImageOptions = {
     quality: 80,
