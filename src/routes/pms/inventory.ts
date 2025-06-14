@@ -3,7 +3,7 @@ import { verifyApiKey } from '../../middleware/auth';
 
 const router = Router();
 
-router.post('/api/pms/inventory/adjust', verifyApiKey, async (req, res) => {
+router.post('/inventory/adjust', verifyApiKey, async (req, res) => {
   try {
     const { productId, adjustment, reason } = req.body;
     

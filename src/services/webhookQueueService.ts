@@ -1,59 +1,45 @@
 import Bull from 'bull';
-import { redis } from '../config/redis';
-
-interface WebhookPayload {
-  event: string;
-  data: any;
-  timestamp: string;
-  endpoint?: string;
-  attempts?: number;
-}
 
 export class WebhookQueue {
   private static instance: WebhookQueue;
-  private queue: Bull.Queue<WebhookPayload>;
+  private queue: Bull.Queue;
 
   private constructor() {
     this.queue = new Bull('webhooks', {
       redis: process.env.REDIS_URL,
       defaultJobOptions: {
-        removeOnComplete: true
+        removeOnComplete: true,
+        attempts: 3
       }
     });
   }
 
-  public static getInstance(): WebhookQueue {
+  static getInstance(): WebhookQueue {
     if (!WebhookQueue.instance) {
       WebhookQueue.instance = new WebhookQueue();
     }
     return WebhookQueue.instance;
   }
 
-  public async add(name: string, data: WebhookPayload): Promise<Bull.Job<WebhookPayload>> {
-    return this.queue.add(name, data);
+  async add(name: string, data: any, opts?: Bull.JobOptions): Promise<Bull.Job> {
+    return this.queue.add(name, data, opts);
   }
 
-  private async process(): Promise<void> {
-    this.queue.process(async (job: Bull.Job<WebhookPayload>) => {
-      try {
-        // Process webhook
-        return job.data;
-      } catch (error) {
-        throw error;
-      }
-    });
-  }
-
-  // Add cleanup method
-  public async close(): Promise<void> {
-    await this.queue.close();
-  }
-
-  // Handle test environment
-  public static async cleanup(): Promise<void> {
-    if (WebhookQueue.instance) {
-      await WebhookQueue.instance.close();
-      WebhookQueue.instance = null!;
+  async cleanup(): Promise<void> {
+    if (this.queue) {
+      await Promise.all([
+        this.queue.pause(true),
+        this.queue.clean(0, 'completed'),
+        this.queue.clean(0, 'failed')
+      ]);
+      await this.queue.close();
     }
   }
+
+  // Add other needed Bull methods
+  getQueue(): Bull.Queue {
+    return this.queue;
+  }
 }
+
+export default WebhookQueue;

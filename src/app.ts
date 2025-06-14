@@ -23,14 +23,22 @@ import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import timeout from 'connect-timeout';
 import authRoutes from './routes/auth';
+import { Router } from 'express';
+import productsRouter from './routes/pms/products';
+import inventoryRouter from './routes/pms/inventory';
+import webhookRouter from './routes/pms/webhook';
 
 
-export const app = express();
+const app = express();
 const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: [process.env.PMS_URL || 'http://localhost:3000'],
+    methods: ['GET', 'POST']
+  }
+});
 
 // Initialize Socket.IO with type-safe configuration
-export const io = new Server(httpServer, socketConfig);
-
 // Socket.IO connection handler with type safety
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
@@ -122,8 +130,14 @@ app.get('/', (req, res) => {
 // Test routes should be first and properly mounted
 app.use('/api/test', testRoutes);
 
+// PMS Routes
+app.use('/api/pms', [
+  productsRouter,    // Using proper router names
+  inventoryRouter,
+  webhookRouter
+]);
+
 // Protected routes
-app.use('/api/pms', apiKeyAuth, pmsRoutes);
 app.use('/api/products', apiKeyAuth, productRoutes);
 app.use('/api/categories', apiKeyAuth, categoryRoutes);
 app.use('/api/orders', apiKeyAuth, orderRoutes);
@@ -146,3 +160,6 @@ app.get('/health', async (req, res) => {
 
 // Error handler should be last
 app.use(errorHandler);
+
+// Export all needed items
+export { app, httpServer, io };

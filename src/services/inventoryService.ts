@@ -1,15 +1,37 @@
 import { db } from '../config/database';
 import { ValidationError, NotFoundError } from '../utils/errors';
 import postgres from 'postgres';
+import { supabase } from '../config/supabaseClient';
 
-interface StockMovement {
+export interface InventoryData {
   product_id: string;
-  type: 'in' | 'out';
   quantity: number;
-  reason: string;
+  low_stock_threshold: number;
+  status: 'in_stock' | 'out_of_stock' | 'discontinued';
+}
+
+export type MovementType = 'increase' | 'decrease';
+
+export interface StockMovement {
+  product_id: string;
+  quantity: number;
+  type: MovementType;
+  reason?: string;
+  reference?: string;
 }
 
 export class InventoryService {
+  private static instance: InventoryService;
+
+  static getInstance(): InventoryService {
+    if (!InventoryService.instance) {
+      InventoryService.instance = new InventoryService();
+    }
+    return InventoryService.instance;
+  }
+
+  protected constructor() {}
+
   async validateStockLevel(productId: string, quantity: number): Promise<void> {
     const [product] = await db`
       SELECT stock FROM products WHERE id = ${productId}
@@ -25,30 +47,30 @@ export class InventoryService {
   }
 
   async recordMovement(movement: StockMovement): Promise<void> {
-    if (movement.quantity <= 0) {
-      throw new ValidationError('Quantity must be positive');
-    }
+    const stockChange = movement.type === 'increase' ? movement.quantity : -movement.quantity;
 
-    return await db.begin(async (client: postgres.TransactionSql) => {
-      // Record movement
-      await client`
-        INSERT INTO inventory_movements ${client(movement)}
-      `;
+    // First record the movement
+    const { error: movementError } = await supabase
+      .from('inventory_movements')
+      .insert({
+        product_id: movement.product_id,
+        quantity: stockChange,
+        type: movement.type,
+        reason: movement.reason,
+        reference: movement.reference,
+        timestamp: new Date().toISOString()
+      });
 
-      // Update product stock
-      const stockChange = movement.type === 'in' ? movement.quantity : -movement.quantity;
-      const [updated] = await client`
-        UPDATE products 
-        SET stock = stock + ${stockChange},
-            updated_at = NOW()
-        WHERE id = ${movement.product_id}
-        RETURNING stock
-      `;
+    if (movementError) throw movementError;
 
-      if (updated.stock < 0) {
-        throw new ValidationError('Stock cannot be negative');
-      }
-    });
+    // Then update inventory using rpc
+    const { error: updateError } = await supabase
+      .rpc('update_inventory_quantity', { 
+        p_product_id: movement.product_id,
+        p_quantity_change: stockChange 
+      });
+
+    if (updateError) throw updateError;
   }
 
   async getStockHistory(productId: string, startDate?: Date, endDate?: Date) {
@@ -119,5 +141,23 @@ export class InventoryService {
         `;
       }
     });
+  }
+
+  async initializeInventory(productId: string): Promise<InventoryData> {
+    const inventoryData = {
+      product_id: productId,
+      quantity: 0,
+      status: 'out_of_stock'
+      // Removed low_stock_threshold as it doesn't exist in schema
+    };
+
+    const { data, error } = await supabase
+      .from('inventory')
+      .insert(inventoryData)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   }
 }
