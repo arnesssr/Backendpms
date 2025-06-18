@@ -75,8 +75,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware
+// Move CORS middleware to be first, before any other middleware
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight explicitly
+
+// Add specific CORS error handler
+app.use((err: any, req: any, res: any, next: any) => {
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({
+      error: 'CORS Error',
+      message: 'Origin not allowed'
+    });
+  }
+  next(err);
+});
 
 // Add timeout middleware
 app.use(timeout('30s'));
