@@ -55,8 +55,12 @@ export class ImageService {
     return ImageService.instance;
   }
 
-  // Changed from static to instance method
-  async uploadImage(file: UploadedFile | Buffer, options: ImageOptions = {}): Promise<ImageMetadata> {
+  public static async uploadImage(file: UploadedFile | Buffer, options: ImageOptions = {}): Promise<ImageMetadata> {
+    const instance = ImageService.getInstance();
+    return instance.uploadImageInternal(file, options);
+  }
+
+  private async uploadImageInternal(file: UploadedFile | Buffer, options: ImageOptions = {}): Promise<ImageMetadata> {
     try {
       const buffer = file instanceof Buffer ? file : file.buffer;
       const opts = { ...this.defaultOptions, ...options };
