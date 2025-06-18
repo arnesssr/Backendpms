@@ -16,7 +16,7 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  // Add CORS headers to error responses
+  // Ensure CORS headers are set before error response
   res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.header('Access-Control-Allow-Credentials', 'true');
 

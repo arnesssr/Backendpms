@@ -2,9 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import { SecurityError } from '../types/security';
 
 export const apiKeyAuth = (req: Request, res: Response, next: NextFunction) => {
-  // Handle preflight requests
+  // Skip auth for OPTIONS requests
   if (req.method === 'OPTIONS') {
-    return next();
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, X-API-Key');
+    return res.status(204).end();
   }
 
   const apiKey = req.header('X-API-Key');

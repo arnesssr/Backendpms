@@ -1,14 +1,16 @@
 import cors from 'cors';
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,         // Production frontend URL
-  process.env.DEV_FRONTEND_URL,     // Development frontend URL
-  process.env.LOCAL_FRONTEND_URL    // Local development URL
-].filter(Boolean); // Remove any undefined values
+const ENVIRONMENT = process.env.NODE_ENV || 'development';
 
-export const corsOptions: cors.CorsOptions = {
+const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, etc)
+    const productionOrigins = [process.env.FRONTEND_URL];
+    const developmentOrigins = ['http://localhost:5173', 'http://127.0.0.1:5174'];
+    
+    const allowedOrigins = ENVIRONMENT === 'production' 
+      ? productionOrigins
+      : [...productionOrigins, ...developmentOrigins];
+
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -21,13 +23,12 @@ export const corsOptions: cors.CorsOptions = {
     'Content-Type',
     'Authorization',
     'X-API-Key',
-    'X-Request-Timestamp',
-    'X-Request-Nonce',
-    'X-Request-Signature',
-    'access-control-allow-origin',
+    'Access-Control-Allow-Origin',
     'Access-Control-Allow-Credentials',
     'Access-Control-Allow-Headers'
   ],
   optionsSuccessStatus: 204,
   preflightContinue: false
 };
+
+export { corsOptions };
