@@ -1,19 +1,21 @@
 import cors from 'cors';
 
 const allowedOrigins = [
-  'https://inventra-frontend.vercel.app',
-  'http://localhost:5173',
-  'http://localhost:3000'
-];
+  process.env.FRONTEND_URL,         // Production frontend URL
+  process.env.DEV_FRONTEND_URL,     // Development frontend URL
+  process.env.LOCAL_FRONTEND_URL    // Local development URL
+].filter(Boolean); // Remove any undefined values
 
 export const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    // Allow requests with no origin (like mobile apps, curl, etc)
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type',
@@ -21,8 +23,11 @@ export const corsOptions: cors.CorsOptions = {
     'X-API-Key',
     'X-Request-Timestamp',
     'X-Request-Nonce',
-    'X-Request-Signature'
+    'X-Request-Signature',
+    'access-control-allow-origin',
+    'Access-Control-Allow-Credentials',
+    'Access-Control-Allow-Headers'
   ],
-  credentials: true,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
+  preflightContinue: false
 };
