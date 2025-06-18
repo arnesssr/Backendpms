@@ -58,7 +58,7 @@ export class ProductService {
 
     // Category validation
     if (data.category) {
-      const [category] = await db`
+      const [category] = await db.query<ProductRow[]>`
         SELECT id FROM categories WHERE name = ${data.category}
       `;
       if (!category) {
@@ -70,7 +70,7 @@ export class ProductService {
   async createProduct(data: Product): Promise<Product> {
     await this.validateProduct(data);
     
-    const result = await db.begin(async (client: postgres.TransactionSql) => {
+    const result = await db.transaction(async (client) => {
       const [row] = await client<ProductRow[]>`
         INSERT INTO products ${client({
           ...data,
@@ -99,7 +99,7 @@ export class ProductService {
   async updateProduct(id: string, data: Partial<Product>): Promise<Product> {
     await this.validateProduct(data);
 
-    const result = await db.begin(async (client: postgres.TransactionSql) => {
+    const result = await db.transaction(async (client) => {
       const [row] = await client<ProductRow[]>`
         UPDATE products 
         SET ${client({
@@ -143,7 +143,7 @@ export class ProductService {
   }
 
   async updateStatus(id: string, status: ProductStatusType): Promise<Product> {
-    const [current] = await db<ProductRow[]>`
+    const [current] = await db.query<ProductRow[]>`
       SELECT * FROM products WHERE id = ${id}
     `;
 
@@ -163,7 +163,7 @@ export class ProductService {
       );
     }
 
-    const [row] = await db<ProductRow[]>`
+    const [row] = await db.query<ProductRow[]>`
       UPDATE products 
       SET status = ${status},
           updated_at = NOW()
@@ -175,15 +175,16 @@ export class ProductService {
   }
 
   async getProductsByCategory(category: string): Promise<Product[]> {
-    return await db`
+    const rows = await db.query<ProductRow[]>`
       SELECT * FROM products 
       WHERE category = ${category}
       ORDER BY created_at DESC
     `;
+    return rows.map(mapRowToProduct);
   }
 
   async getProductWithInventory(id: string) {
-    const [product] = await db`
+    const [product] = await db.query<any[]>`
       SELECT p.*, 
         COALESCE(
           json_agg(
@@ -209,15 +210,16 @@ export class ProductService {
   }
 
   async searchProducts(query: string): Promise<Product[]> {
-    return await db`
+    const rows = await db.query<ProductRow[]>`
       SELECT * FROM products 
       WHERE 
         name ILIKE ${'%' + query + '%'} OR
-        description ILIKE ${'%' + query + '%'
-    } ORDER BY 
+        description ILIKE ${'%' + query + '%'}
+      ORDER BY 
         CASE WHEN name ILIKE ${'%' + query + '%'} THEN 1
              WHEN description ILIKE ${'%' + query + '%'} THEN 2
         END
     `;
+    return rows.map(mapRowToProduct);
   }
 }
