@@ -1,5 +1,4 @@
 import express from 'express';
-import { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
@@ -27,6 +26,7 @@ import { Router } from 'express';
 import productsRouter from './routes/pms/products';
 import inventoryRouter from './routes/pms/inventory';
 import webhookRouter from './routes/pms/webhook';
+import { corsOptions } from './config/corsConfig';
 
 
 const app = express();
@@ -75,24 +75,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware
-app.use(cors({
-  origin: [
-    process.env.PMS_URL || 'http://localhost:5173',
-    process.env.STOREFRONT_URL || 'http://localhost:3000'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-API-Key',
-    'X-Request-Signature',
-    'X-Request-Timestamp',
-    'X-Request-Nonce'
-  ],
-  maxAge: 600 // Cache preflight requests for 10 minutes
-}));
+// Move CORS middleware to be first, before any other middleware
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight explicitly
+
+// Add specific CORS error handler
+app.use((err: any, req: any, res: any, next: any) => {
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({
+      error: 'CORS Error',
+      message: 'Origin not allowed'
+    });
+  }
+  next(err);
+});
 
 // Add timeout middleware
 app.use(timeout('30s'));
