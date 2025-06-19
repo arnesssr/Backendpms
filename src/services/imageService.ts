@@ -1,18 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { supabase } from '../config/supabaseClient';
-import sharp, { Sharp, ResizeOptions, format } from 'sharp';
-import { resolve } from 'dns';
-import { number, any, string } from 'zod/dist/types';
-import { Buffer } from 'buffer';
-
-// Define our own file interface
-interface UploadedFile {
-  buffer: Buffer;
-  originalname: string;
-  mimetype: string;
-  size: number;
-  data: Buffer;
-}
+import sharp, { Sharp, ResizeOptions } from 'sharp';
 
 interface ImageMetadata {
   format: string;
@@ -22,6 +10,7 @@ interface ImageMetadata {
   publicId: string;
   version: string;
 }
+
 interface ImageOptions {
   quality?: number;
   maxWidth?: number;
@@ -30,15 +19,16 @@ interface ImageOptions {
 }
 
 export class ImageService {
+  static uploadImage(file: Express.Multer.File): any {
+    throw new Error('Method not implemented.');
+  }
   private static instance: ImageService;
-
   private readonly defaultOptions: ImageOptions = {
     quality: 80,
     maxWidth: 1200,
     maxHeight: 1200,
     format: 'webp'
   };
-  static defaultOptions: any;
 
   private constructor() {
     cloudinary.config({
@@ -48,71 +38,50 @@ export class ImageService {
     });
   }
 
-  public static getInstance(): ImageService {
+  static getInstance(): ImageService {
     if (!ImageService.instance) {
       ImageService.instance = new ImageService();
     }
     return ImageService.instance;
   }
 
-  public static async uploadImage(file: UploadedFile | Buffer, options: ImageOptions = {}): Promise<ImageMetadata> {
-    const instance = ImageService.getInstance();
-    return instance.uploadImageInternal(file, options);
-  }
+  async uploadImage(
+    file: Buffer,
+    options: ImageOptions = {}
+  ): Promise<ImageMetadata> {
+    const opts = { ...this.defaultOptions, ...options };
+    
+    // Optimize image before upload
+    const optimized = await this.optimizeImage(file, opts);
+    
+    // Upload to Cloudinary
+    const result = await new Promise<any>((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'image',
+          folder: 'products',
+          format: opts.format
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(optimized);
+    });
 
-  private async uploadImageInternal(file: UploadedFile | Buffer, options: ImageOptions = {}): Promise<ImageMetadata> {
-    try {
-      const buffer = file instanceof Buffer ? file : file.buffer;
-      const opts = { ...this.defaultOptions, ...options };
-      // Optimize image before upload
-      const optimized = await this.optimizeImage(Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer), opts);
-
-      // Upload to Cloudinary
-      const result = await new Promise<any>((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-          {
-            resource_type: 'image',
-            folder: 'products',
-            format: opts.format
-          },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        ).end(optimized);
-      });
-
-      // Extract and store metadata
-      const metadata: ImageMetadata = {
-        format: result.format,
-        width: result.width,
-        height: result.height,
-        size: result.bytes,
-        publicId: result.public_id,
-        version: result.version
-      };
-      await this.storeImageMetadata(result.public_id, metadata);
-      return metadata;
-    } catch (error) {
-      console.error('Image upload failed:', error);
-      throw new Error('Failed to upload image');
-    }
-  }
-  static optimizeImage(buffer: ArrayBufferLike, opts: any) {
-    throw new Error('Method not implemented.');
-  }
-  static storeImageMetadata(public_id: any, metadata: ImageMetadata) {
-    throw new Error('Method not implemented.');
-  }
-
-  private static async processImage(buffer: Buffer): Promise<any> {
-    // Image processing logic here
-    return {
-      url: 'processed-image-url',
-      publicId: 'generated-public-id',
-      width: 0,
-      height: 0
+    // Extract and store metadata
+    const metadata: ImageMetadata = {
+      format: result.format,
+      width: result.width,
+      height: result.height,
+      size: result.bytes,
+      publicId: result.public_id,
+      version: result.version
     };
+
+    await this.storeImageMetadata(result.public_id, metadata);
+
+    return metadata;
   }
 
   private async optimizeImage(
@@ -130,19 +99,21 @@ export class ImageService {
       .toBuffer();
   }
 
-  async storeImageMetadata(publicId: string, metadata: any): Promise<void> {
+  private async storeImageMetadata(
+    publicId: string,
+    metadata: ImageMetadata
+  ): Promise<void> {
     await supabase.from('image_metadata').insert({
       public_id: publicId,
-      ...metadata
+      metadata,
+      version: metadata.version
     });
   }
 
   getCdnUrl(publicId: string, transformations: Record<string, any> = {}): string {
     return cloudinary.url(publicId, {
-      ...transformations,
       secure: true,
+      ...transformations
     });
   }
 }
-
-export const imageService = ImageService.getInstance();

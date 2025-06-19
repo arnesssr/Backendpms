@@ -52,7 +52,7 @@ productsRouter.post('/products',
 
         imageUrls = await Promise.all(
           files.map(async (file: UploadedFile) => {
-            const metadata = await ImageService.uploadImage(file.data);
+            const metadata = await imageService.uploadImage(file.data);
             return imageService.getCdnUrl(metadata.publicId);
           })
         );

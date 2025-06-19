@@ -21,7 +21,7 @@ export class CacheService {
     const data = await fetchFn();
     
     // Cache the result
-    await redis.set(key, JSON.stringify(data), { EX: ttl || this.DEFAULT_TTL });
+    await redis.set(key, JSON.stringify(data), 'EX', ttl || this.DEFAULT_TTL);
     
     return data;
   }
@@ -34,13 +34,7 @@ export class CacheService {
   }
 
   async warmCache(key: string, data: any, ttl?: number): Promise<void> {
-    await redis.set(
-      key,
-      JSON.stringify(data),
-      {
-        EX: ttl || this.DEFAULT_TTL
-      }
-    );
+    await redis.set(key, JSON.stringify(data), 'EX', ttl || this.DEFAULT_TTL);
   }
 }
 

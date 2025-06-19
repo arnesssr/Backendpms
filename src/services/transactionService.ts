@@ -18,10 +18,9 @@ export class TransactionService {
     const lock = await redis.set(
       `lock:${lockKey}`,
       'locked',
-      {
-        NX: true,
-        EX: 5
-      }
+      'EX',
+      5,
+      'NX'
     );
 
     if (!lock) {
