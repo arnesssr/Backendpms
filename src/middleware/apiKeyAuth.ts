@@ -2,6 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import { SecurityError } from '../types/security';
 
 export const apiKeyAuth = (req: Request, res: Response, next: NextFunction) => {
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   const apiKey = req.header('X-API-Key');
   const expectedApiKey = process.env.API_KEY;
 
