@@ -2,13 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { SecurityError } from '../types/security';
 
 export const apiKeyAuth = (req: Request, res: Response, next: NextFunction) => {
-  // Skip auth for OPTIONS requests
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, X-API-Key');
-    return res.status(204).end();
-  }
-
   const apiKey = req.header('X-API-Key');
   const expectedApiKey = process.env.API_KEY;
 
